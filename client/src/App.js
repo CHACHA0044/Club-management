@@ -1,42 +1,23 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Navbar from "./components/common/Navbar";
-
+import MyRegistrations from "./components/myregistrarions/myregistrations.jsx";
 import Login from "./components/auth/login";
 import Register from "./components/auth/register";
 import Home from "./components/home";
-//import EventDetails from "./components/events/EventDetails";
-
-
+import EventsPage from "./components/events/EventsPage";
+import Organiser from "./components/organiser/organiser.jsx";
 
 function App() {
   return (
     <BrowserRouter>
-      <Navbar />
       <div className="container">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          {/* <Route path="/events/:id" element={<EventDetails />} /> */}
-          
-          {/* <Route
-            path="/my-registrations"
-            element={
-              <ProtectedRoute>
-                <MyRegistrations />
-              </ProtectedRoute>
-            }
-          /> */}
-          
-          {/* <Route
-            path="/admin/events/create"
-            element={
-              <AdminRoute>
-                <CreateEvent />
-              </AdminRoute>
-            }
-          /> */}
+          <Route path="/events" element={<EventsPage />} />
+          <Route path="/my-registrations" element={<MyRegistrations />} />
+          <Route path="/organiser" element={<Organiser />} />
         </Routes>
       </div>
     </BrowserRouter>

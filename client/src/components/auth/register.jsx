@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { registerUser } from "../../api/auth";
+import Navbar from "../common/Navbar";
 
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("student"); // New state for role
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +28,7 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      const res = await registerUser({ name, email, password });
+      const res = await registerUser({ name, email, password, role }); // Include role in registration
       setSuccess(res.data.message || "Registration successful!");
       
       setTimeout(() => {
@@ -120,12 +122,79 @@ const Register = () => {
         .delay-200 { animation-delay: 0.2s; }
         .delay-300 { animation-delay: 0.3s; }
         .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
 
         input:focus {
           outline: none;
         }
-      `}</style>
 
+        .toggle-switch {
+          position: relative;
+          display: inline-block;
+          width: 100%;
+          height: 60px;
+        }
+
+        .toggle-switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+
+        .toggle-slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #e5e7eb;
+          transition: 0.4s;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 8px;
+          border: 2px solid #1e3a8a;
+        }
+
+        .toggle-slider:before {
+          position: absolute;
+          content: "";
+          height: 48px;
+          width: 50%;
+          left: 4px;
+          bottom: 4px;
+          background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+          transition: 0.4s;
+          border-radius: 8px;
+          box-shadow: 0 4px 10px rgba(30, 58, 138, 0.3);
+        }
+
+        input:checked + .toggle-slider:before {
+          transform: translateX(calc(100% - 8px));
+        }
+
+        .toggle-label {
+          position: relative;
+          z-index: 1;
+          width: 50%;
+          text-align: center;
+          font-weight: 700;
+          font-size: 16px;
+          transition: color 0.3s;
+          padding: 8px;
+        }
+
+        .toggle-label.active {
+          color: white;
+        }
+
+        .toggle-label.inactive {
+          color: #4b5563;
+        }
+      `}</style>
+      <Navbar user={null} isLoggedIn={false} />
       <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-blue-700 to-black gradient-animate">
@@ -256,8 +325,36 @@ const Register = () => {
                 </div>
               </div>
 
+              {/* Role Toggle - Student/Organizer */}
+              <div className="animate-fadeInUp delay-400">
+                <label className="block text-gray-700 font-bold mb-3 text-lg">
+                  Account Type
+                </label>
+                <div className="toggle-switch">
+                  <input 
+                    type="checkbox" 
+                    id="roleToggle"
+                    checked={role === "organizer"}
+                    onChange={(e) => setRole(e.target.checked ? "organizer" : "student")}
+                  />
+                  <label htmlFor="roleToggle" className="toggle-slider">
+                    <span className={`toggle-label ${role === "student" ? "active" : "inactive"}`}>
+                      🎓 Student
+                    </span>
+                    <span className={`toggle-label ${role === "organizer" ? "active" : "inactive"}`}>
+                      🎯 Organizer
+                    </span>
+                  </label>
+                </div>
+                <p className="text-sm text-gray-500 mt-2 text-center">
+                  {role === "student" 
+                    ? "Register for events and track your participation" 
+                    : "Create and manage events, approve registrations"}
+                </p>
+              </div>
+
               {/* Terms & Conditions */}
-              <div className="flex items-start animate-fadeInUp delay-400">
+              <div className="flex items-start animate-fadeInUp delay-500">
                 <input 
                   type="checkbox" 
                   id="terms"
@@ -280,7 +377,7 @@ const Register = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="group relative w-full py-4 bg-gradient-to-r from-blue-900 to-blue-700 text-white font-bold text-xl rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 overflow-hidden animate-fadeInUp delay-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative w-full py-4 bg-gradient-to-r from-blue-900 to-blue-700 text-white font-bold text-xl rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 overflow-hidden animate-fadeInUp delay-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   {isLoading ? (
@@ -303,7 +400,7 @@ const Register = () => {
             </form>
 
             {/* Divider */}
-            <div className="relative my-8 animate-fadeInUp delay-400">
+            <div className="relative my-8 animate-fadeInUp delay-500">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t-2 border-gray-300"></div>
               </div>
@@ -313,7 +410,7 @@ const Register = () => {
             </div>
 
             {/* Login Link */}
-            <div className="text-center animate-fadeInUp delay-400">
+            <div className="text-center animate-fadeInUp delay-500">
               <p className="text-gray-600 text-lg">
                 Already have an account?{" "}
                 <Link 
@@ -326,7 +423,7 @@ const Register = () => {
             </div>
 
             {/* Back to Home */}
-            <div className="text-center mt-6 animate-fadeInUp delay-400">
+            <div className="text-center mt-6 animate-fadeInUp delay-500">
               <Link 
                 to="/" 
                 className="inline-flex items-center gap-2 text-gray-600 hover:text-blue-900 transition-colors duration-300 font-medium"

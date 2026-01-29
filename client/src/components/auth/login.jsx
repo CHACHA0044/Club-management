@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { loginUser } from "../../api/auth";
+import Navbar from "../common/Navbar";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -16,11 +17,20 @@ const Login = () => {
     
     try {
       const res = await loginUser({ email, password });
+      
+      // Store token and user data
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       
-      // Redirect to home
-      navigate("/");
+      // Get user role from response
+      const userRole = res.data.user.role;
+      
+      // Redirect based on role
+      if (userRole === "organizer" || userRole === "admin") {
+        navigate("/organizer");
+      } else {
+        navigate("/events");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     } finally {
@@ -113,7 +123,7 @@ const Login = () => {
           outline: none;
         }
       `}</style>
-
+      <Navbar user={null} isLoggedIn={false} />
       <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-blue-700 to-black gradient-animate">

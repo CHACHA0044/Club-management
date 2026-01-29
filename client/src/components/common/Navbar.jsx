@@ -1,425 +1,169 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 
-const Navbar = () => {
+const Navbar = ({ user, isLoggedIn }) => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const user = JSON.parse(sessionStorage.getItem("user") || localStorage.getItem("user") || "null");
-  const isLoggedIn = !!(sessionStorage.getItem("token") || localStorage.getItem("token"));
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const isOrganizer = user?.role === "organizer" || user?.role === "admin";
+  const isStudent = user?.role === "student";
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
-    setIsMobileMenuOpen(false);
     navigate("/login");
-  };
-
-  const isActive = (path) => location.pathname === path;
-
-  const navStyle = {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    background: isScrolled 
-      ? "rgba(255, 255, 255, 0.95)" 
-      : "rgba(255, 255, 255, 0.98)",
-    backdropFilter: "blur(10px)",
-    WebkitBackdropFilter: "blur(10px)",
-    boxShadow: isScrolled 
-      ? "0 4px 20px rgba(30, 64, 175, 0.1)" 
-      : "0 2px 10px rgba(0, 0, 0, 0.05)",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-    padding: isScrolled ? "0.75rem 0" : "1rem 0",
-  };
-
-  const containerStyle = {
-    maxWidth: "1400px",
-    margin: "0 auto",
-    padding: "0 2rem",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  };
-
-  const brandStyle = {
-    fontSize: "1.5rem",
-    fontWeight: "800",
-    background: "linear-gradient(135deg, #1e40af, #3b82f6)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    backgroundClip: "text",
-    textDecoration: "none",
-    transition: "all 0.3s ease",
-    cursor: "pointer",
-  };
-
-  const navLinksContainerStyle = {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
-  };
-
-  const linkStyle = (active) => ({
-    color: active ? "#1e40af" : "#475569",
-    textDecoration: "none",
-    padding: "0.6rem 1.2rem",
-    borderRadius: "8px",
-    fontWeight: active ? "600" : "500",
-    fontSize: "0.95rem",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-    position: "relative",
-    background: active ? "rgba(30, 64, 175, 0.08)" : "transparent",
-    cursor: "pointer",
-  });
-
-  const buttonStyle = {
-    color: "white",
-    background: "linear-gradient(135deg, #1e40af, #3b82f6)",
-    border: "none",
-    padding: "0.6rem 1.5rem",
-    borderRadius: "8px",
-    fontWeight: "600",
-    fontSize: "0.95rem",
-    cursor: "pointer",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-    boxShadow: "0 2px 10px rgba(30, 64, 175, 0.2)",
-  };
-
-  const mobileMenuButtonStyle = {
-    display: "none",
-    background: "transparent",
-    border: "none",
-    cursor: "pointer",
-    padding: "0.5rem",
-    color: "#1e40af",
-    fontSize: "1.5rem",
-  };
-
-  const mobileMenuStyle = {
-    display: "none",
-    position: "fixed",
-    top: isScrolled ? "60px" : "72px",
-    left: 0,
-    right: 0,
-    background: "rgba(255, 255, 255, 0.98)",
-    backdropFilter: "blur(10px)",
-    WebkitBackdropFilter: "blur(10px)",
-    boxShadow: "0 4px 20px rgba(30, 64, 175, 0.1)",
-    padding: "1.5rem",
-    flexDirection: "column",
-    gap: "0.75rem",
-    animation: "slideDown 0.3s ease-out",
-    borderTop: "1px solid rgba(30, 64, 175, 0.1)",
-  };
-
-  const mobileLinkStyle = (active) => ({
-    ...linkStyle(active),
-    width: "100%",
-    textAlign: "center",
-    padding: "0.8rem 1rem",
-  });
-
-  const handleLinkClick = () => {
-    setIsMobileMenuOpen(false);
   };
 
   return (
     <>
-      <style>
-        {`
-          @keyframes slideDown {
-            from {
-              opacity: 0;
-              transform: translateY(-10px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
+      <style>{`
+        .glass-effect {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+      `}</style>
 
-          .nav-link:hover {
-            background: rgba(30, 64, 175, 0.08);
-            color: #1e40af;
-            transform: translateY(-2px);
-          }
-
-          .nav-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(30, 64, 175, 0.4);
-          }
-
-          .nav-button:active {
-            transform: translateY(0);
-          }
-
-          .brand-link:hover {
-            transform: scale(1.05);
-            filter: brightness(1.1);
-          }
-
-          .mobile-menu-button {
-            display: none;
-          }
-
-          @media (max-width: 768px) {
-            .nav-links-desktop {
-              display: none !important;
-            }
-
-            .mobile-menu-button {
-              display: block !important;
-            }
-
-            .mobile-menu-open {
-              display: flex !important;
-            }
-          }
-
-          @media (min-width: 769px) {
-            .mobile-menu {
-              display: none !important;
-            }
-          }
-
-          /* Hamburger Animation */
-          .hamburger {
-            width: 24px;
-            height: 20px;
-            position: relative;
-            cursor: pointer;
-          }
-
-          .hamburger span {
-            display: block;
-            position: absolute;
-            height: 3px;
-            width: 100%;
-            background: #1e40af;
-            border-radius: 3px;
-            opacity: 1;
-            left: 0;
-            transform: rotate(0deg);
-            transition: 0.25s ease-in-out;
-          }
-
-          .hamburger span:nth-child(1) {
-            top: 0px;
-          }
-
-          .hamburger span:nth-child(2) {
-            top: 8px;
-          }
-
-          .hamburger span:nth-child(3) {
-            top: 16px;
-          }
-
-          .hamburger.open span:nth-child(1) {
-            top: 8px;
-            transform: rotate(135deg);
-          }
-
-          .hamburger.open span:nth-child(2) {
-            opacity: 0;
-            left: -30px;
-          }
-
-          .hamburger.open span:nth-child(3) {
-            top: 8px;
-            transform: rotate(-135deg);
-          }
-        `}
-      </style>
-
-      <nav style={navStyle}>
-        <div style={containerStyle}>
-          {/* Brand */}
-          <Link 
-            to="/" 
-            style={brandStyle}
-            className="brand-link"
-            onClick={handleLinkClick}
-          >
-            Club Hub
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div 
-            style={navLinksContainerStyle}
-            className="nav-links-desktop"
-          >
-            <Link 
-              to="/events" 
-              style={linkStyle(isActive("/events"))}
-              className="nav-link"
-            >
-              Events
-            </Link>
-
-            {isLoggedIn ? (
-              <>
-                {user?.role === "admin" ? (
-                  <>
-                    <Link 
-                      to="/admin/dashboard" 
-                      style={linkStyle(isActive("/admin/dashboard"))}
-                      className="nav-link"
-                    >
-                      Dashboard
-                    </Link>
-                    <Link 
-                      to="/admin/events/create" 
-                      style={linkStyle(isActive("/admin/events/create"))}
-                      className="nav-link"
-                    >
-                      Create Event
-                    </Link>
-                  </>
-                ) : (
-                  <Link 
-                    to="/my-registrations" 
-                    style={linkStyle(isActive("/my-registrations"))}
-                    className="nav-link"
-                  >
-                    My Registrations
-                  </Link>
-                )}
-                <button 
-                  onClick={handleLogout}
-                  style={buttonStyle}
-                  className="nav-button"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link 
-                  to="/login" 
-                  style={linkStyle(isActive("/login"))}
-                  className="nav-link"
-                >
-                  Login
-                </Link>
-                <Link 
-                  to="/register" 
-                  style={{...buttonStyle, textDecoration: "none", display: "inline-block"}}
-                  className="nav-button"
-                >
-                  Register
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            style={mobileMenuButtonStyle}
-            className="mobile-menu-button"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            <div className={`hamburger ${isMobileMenuOpen ? 'open' : ''}`}>
-              <span></span>
-              <span></span>
-              <span></span>
+      <header className="sticky top-0 z-50 glass-effect border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            {/* Logo/Brand */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate("/")}
+                className="text-white hover:text-blue-300 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              </button>
+              <h1 className="text-2xl sm:text-3xl font-black text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 bg-clip-text text-transparent">
+                  Club Hub
+                </span>
+              </h1>
             </div>
-          </button>
-        </div>
 
-        {/* Mobile Menu */}
-        <div 
-          style={mobileMenuStyle}
-          className={`mobile-menu ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}
-        >
-          <Link 
-            to="/events" 
-            style={mobileLinkStyle(isActive("/events"))}
-            className="nav-link"
-            onClick={handleLinkClick}
-          >
-            Events
-          </Link>
-
-          {isLoggedIn ? (
-            <>
-              {user?.role === "admin" ? (
+            {/* Navigation Links & User Menu */}
+            <div className="flex items-center gap-3">
+              {isLoggedIn ? (
                 <>
-                  <Link 
-                    to="/admin/dashboard" 
-                    style={mobileLinkStyle(isActive("/admin/dashboard"))}
-                    className="nav-link"
-                    onClick={handleLinkClick}
+                  {/* Role-based Navigation */}
+                  {isOrganizer && (
+                    <>
+                      <button
+                        onClick={() => navigate("/organizer")}
+                        className="hidden sm:block px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm font-medium"
+                      >
+                        Dashboard
+                      </button>
+                      <button
+                        onClick={() => navigate("/events")}
+                        className="hidden sm:block px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm font-medium"
+                      >
+                        Browse Events
+                      </button>
+                    </>
+                  )}
+
+                  {isStudent && (
+                    <>
+                      <button
+                        onClick={() => navigate("/events")}
+                        className="hidden sm:block px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm font-medium"
+                      >
+                        Events
+                      </button>
+                      <button
+                        onClick={() => navigate("/my-registrations")}
+                        className="hidden sm:block px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm font-medium"
+                      >
+                        My Registrations
+                      </button>
+                    </>
+                  )}
+
+                  {/* User Info */}
+                  <span className="hidden sm:inline text-white/80 text-sm">
+                    Welcome, <span className="font-semibold text-blue-300">{user?.name || "User"}</span>
+                  </span>
+
+                  {/* Role Badge */}
+                  {user?.role && (
+                    <span className={`hidden sm:inline-block px-3 py-1 rounded-full text-xs font-bold ${
+                      isOrganizer 
+                        ? 'bg-gradient-to-r from-purple-500 to-purple-700 text-white' 
+                        : 'bg-gradient-to-r from-green-500 to-green-700 text-white'
+                    }`}>
+                      {isOrganizer ? '🎯 Organizer' : '🎓 Student'}
+                    </span>
+                  )}
+
+                  {/* Logout Button */}
+                  <button
+                    onClick={handleLogout}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all text-sm font-medium"
                   >
-                    Dashboard
-                  </Link>
-                  <Link 
-                    to="/admin/events/create" 
-                    style={mobileLinkStyle(isActive("/admin/events/create"))}
-                    className="nav-link"
-                    onClick={handleLinkClick}
-                  >
-                    Create Event
-                  </Link>
+                    Logout
+                  </button>
                 </>
               ) : (
-                <Link 
-                  to="/my-registrations" 
-                  style={mobileLinkStyle(isActive("/my-registrations"))}
-                  className="nav-link"
-                  onClick={handleLinkClick}
-                >
-                  My Registrations
-                </Link>
+                <>
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all text-sm font-medium"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => navigate("/register")}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white rounded-lg transition-all text-sm font-medium shadow-lg shadow-blue-500/30"
+                  >
+                    Register
+                  </button>
+                </>
               )}
-              <button 
-                onClick={handleLogout}
-                style={{...buttonStyle, width: "100%"}}
-                className="nav-button"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link 
-                to="/login" 
-                style={mobileLinkStyle(isActive("/login"))}
-                className="nav-link"
-                onClick={handleLinkClick}
-              >
-                Login
-              </Link>
-              <Link 
-                to="/register" 
-                style={{...buttonStyle, width: "100%", textDecoration: "none", display: "block", textAlign: "center"}}
-                className="nav-button"
-                onClick={handleLinkClick}
-              >
-                Register
-              </Link>
-            </>
+            </div>
+          </div>
+
+          {/* Mobile Navigation Menu (only for logged in users) */}
+          {isLoggedIn && (
+            <div className="sm:hidden mt-4 flex flex-wrap gap-2">
+              {isOrganizer && (
+                <>
+                  <button
+                    onClick={() => navigate("/organizer")}
+                    className="flex-1 px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm font-medium text-center"
+                  >
+                    Dashboard
+                  </button>
+                  <button
+                    onClick={() => navigate("/events")}
+                    className="flex-1 px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm font-medium text-center"
+                  >
+                    Events
+                  </button>
+                </>
+              )}
+
+              {isStudent && (
+                <>
+                  <button
+                    onClick={() => navigate("/events")}
+                    className="flex-1 px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm font-medium text-center"
+                  >
+                    Events
+                  </button>
+                  <button
+                    onClick={() => navigate("/my-registrations")}
+                    className="flex-1 px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all text-sm font-medium text-center"
+                  >
+                    My Registrations
+                  </button>
+                </>
+              )}
+            </div>
           )}
         </div>
-      </nav>
-
-      {/* Spacer to prevent content from going under fixed navbar */}
-      <div style={{ height: isScrolled ? "60px" : "72px" }}></div>
+      </header>
     </>
   );
 };

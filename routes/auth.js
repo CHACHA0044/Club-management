@@ -8,7 +8,8 @@ const router = express.Router();
 //register
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    // Fixed code
+    const { name, email, password, role } = req.body;
 
     // Basic validation
     if (!name || !email || !password) {
@@ -26,10 +27,11 @@ router.post("/register", async (req, res) => {
 
     // Create user
     const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-    });
+  name,
+  email,
+  password: hashedPassword,
+  role: role || "student", // Add this line with a default fallback
+});
 
     res.status(201).json({
       message: "User registered successfully",
@@ -90,6 +92,13 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+});
+
+// logout
+router.post("/logout", (req, res) => {
+  res.json({
+    message: "Logout successful",
+  });
 });
 
 module.exports = router;
