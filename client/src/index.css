@@ -11,11 +11,16 @@ body {
   scroll-behavior: smooth;
   margin: 0;
   padding: 0;
+  width: 100%;
+  overflow-x: hidden;
 }
 
+
 body {
-  @apply bg-white text-slate-800 antialiased;
+  @apply antialiased;
+  min-height: 100vh;
 }
+
 
 /* =========================
    Custom Animations (Utilities)

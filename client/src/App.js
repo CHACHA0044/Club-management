@@ -10,16 +10,14 @@ import Organiser from "./components/organiser/Organizer.jsx";
 function App() {
   return (
     <BrowserRouter>
-      <div className="container">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/events" element={<EventsPage />} />
-          <Route path="/my-registrations" element={<MyRegistrations />} />
-          <Route path="/organizer" element={<Organiser />} />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/events" element={<EventsPage />} />
+        <Route path="/my-registrations" element={<MyRegistrations />} />
+        <Route path="/organizer" element={<Organiser />} />
+      </Routes>
     </BrowserRouter>
   );
 }
