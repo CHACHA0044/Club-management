@@ -13,5 +13,8 @@
         "server": "npm run start --workspace=@club/server",
         "build": "npm run build --workspace=@club/client",
         "install-all": "npm install"
+    },
+    "devDependencies": {
+        "concurrently": "^9.2.1"
     }
 }
