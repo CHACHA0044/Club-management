@@ -15,13 +15,13 @@ const Login = () => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    
+
     try {
       const res = await loginUser({ email, password });
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       const userRole = res.data.user.role;
-      
+
       if (userRole === "organizer" || userRole === "admin") {
         navigate("/organizer");
       } else {
@@ -37,7 +37,7 @@ const Login = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap');
         
         @keyframes slideUp {
           from {
@@ -208,11 +208,11 @@ const Login = () => {
       `}</style>
 
       <Navbar user={null} isLoggedIn={false} />
-      
-      <div className="min-h-screen flex items-center justify-center px-4 py-20 relative overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
-        
+
+      <div className="min-h-screen flex items-center justify-center px-4 py-20 relative overflow-hidden" style={{ fontFamily: "'Nunito', sans-serif" }}>
+
         <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-blue-800 to-blue-950 gradient-shift">
-          
+
           <div className="absolute inset-0">
             <div className="absolute top-20 left-20 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl float-slow"></div>
             <div className="absolute bottom-20 right-20 w-80 h-80 bg-cyan-400/20 rounded-full blur-3xl float-medium"></div>
@@ -234,28 +234,28 @@ const Login = () => {
         </div>
 
         <div className="relative z-10 w-full max-w-lg">
-          
+
           <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl float-fast"></div>
-          
+
           <div className="glass-card rounded-3xl shadow-2xl p-8 sm:p-12 border border-blue-200/20 animate-slideUp">
-            
+
             <div className="text-center mb-10 animate-slideUp delay-100">
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl mb-6 float-fast shadow-lg shadow-blue-500/50">
                 <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              
-              <h1 className="text-4xl sm:text-5xl font-black text-blue-950 mb-3" style={{ fontFamily: "'Poppins', sans-serif", letterSpacing: '-0.02em' }}>
+
+              <h1 className="text-4xl sm:text-5xl font-black text-blue-950 mb-3" style={{ letterSpacing: '-0.02em' }}>
                 Welcome Back
               </h1>
-              
+
               <div className="flex items-center justify-center gap-2 mb-4">
                 <div className="h-1 w-12 bg-gradient-to-r from-blue-600 to-blue-400 rounded-full"></div>
                 <div className="h-1 w-8 bg-gradient-to-r from-blue-400 to-blue-300 rounded-full"></div>
                 <div className="h-1 w-4 bg-blue-300 rounded-full"></div>
               </div>
-              
+
               <p className="text-blue-800/70 text-lg font-medium">Sign in to access your account</p>
             </div>
 
@@ -269,7 +269,7 @@ const Login = () => {
             )}
 
             <form onSubmit={handleLogin} className="space-y-6">
-              
+
               <div className="animate-slideUp delay-200">
                 <label htmlFor="email" className="block text-blue-950 font-bold mb-3 text-sm uppercase tracking-wide">
                   Email Address
@@ -332,14 +332,14 @@ const Login = () => {
 
               <div className="flex items-center justify-between animate-slideUp delay-400">
                 <label className="flex items-center cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    className="w-5 h-5 text-blue-600 bg-white border-2 border-blue-300 rounded focus:ring-2 focus:ring-blue-400 focus:ring-offset-0 cursor-pointer transition-all" 
+                  <input
+                    type="checkbox"
+                    className="w-5 h-5 text-blue-600 bg-white border-2 border-blue-300 rounded focus:ring-2 focus:ring-blue-400 focus:ring-offset-0 cursor-pointer transition-all"
                   />
                   <span className="ml-3 text-blue-900 font-semibold text-sm group-hover:text-blue-700 transition-colors">Remember me</span>
                 </label>
-                <Link 
-                  to="#" 
+                <Link
+                  to="#"
                   className="text-blue-600 font-bold text-sm hover:text-blue-800 transition-colors hover:underline decoration-2 underline-offset-4"
                 >
                   Forgot Password?
@@ -385,8 +385,8 @@ const Login = () => {
               <p className="text-blue-900 text-base mb-4 font-medium">
                 Don't have an account yet?
               </p>
-              <Link 
-                to="/register" 
+              <Link
+                to="/register"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl transition-all hover:shadow-md border-2 border-blue-200 hover:border-blue-300"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -397,8 +397,8 @@ const Login = () => {
             </div>
 
             <div className="text-center mt-6 pt-6 border-t border-blue-100 animate-slideUp delay-500">
-              <Link 
-                to="/" 
+              <Link
+                to="/"
                 className="inline-flex items-center gap-2 text-blue-700 hover:text-blue-900 transition-colors font-semibold text-sm group"
               >
                 <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -412,10 +412,10 @@ const Login = () => {
           <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-32 h-32 bg-cyan-400/20 rounded-full blur-2xl float-fast" style={{ animationDelay: '2s' }}></div>
         </div>
 
-        <div className="absolute top-15 left-10 text-blue-300/10 text-9xl font-black float-slow" style={{ fontFamily: "'Poppins', sans-serif" }}>
+        <div className="absolute top-15 left-10 text-blue-300/10 text-9xl font-black float-slow">
           🔐
         </div>
-        <div className="absolute bottom-15 right-10 text-blue-300/10 text-9xl font-black float-medium" style={{ fontFamily: "'Poppins', sans-serif" }}>
+        <div className="absolute bottom-15 right-10 text-blue-300/10 text-9xl font-black float-medium">
           ✨
         </div>
       </div>

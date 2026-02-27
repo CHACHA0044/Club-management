@@ -219,7 +219,7 @@ const EventsPage = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
         
         * {
           margin: 0;
@@ -379,7 +379,7 @@ const EventsPage = () => {
 
       <div className="min-h-screen" style={{
         background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #1e40af 100%)',
-        fontFamily: "'Inter', sans-serif"
+        fontFamily: "'Nunito', sans-serif"
       }}>
         {/* Animated Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -408,7 +408,7 @@ const EventsPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </button>
-                <h1 className="text-2xl sm:text-3xl font-black text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <h1 className="text-2xl sm:text-3xl font-black text-white">
                   <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 bg-clip-text text-transparent">
                     Events Hub
                   </span>
@@ -460,8 +460,8 @@ const EventsPage = () => {
             <button
               onClick={() => setActiveTab("browse")}
               className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === "browse"
-                  ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
-                  : "bg-white/5 text-white/70 hover:bg-white/10"
+                ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
+                : "bg-white/5 text-white/70 hover:bg-white/10"
                 }`}
             >
               <span className="flex items-center justify-center gap-2">
@@ -476,8 +476,8 @@ const EventsPage = () => {
               <button
                 onClick={() => setActiveTab("create")}
                 className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === "create"
-                    ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
-                    : "bg-white/5 text-white/70 hover:bg-white/10"
+                  ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
+                  : "bg-white/5 text-white/70 hover:bg-white/10"
                   }`}
               >
                 <span className="flex items-center justify-center gap-2">
@@ -549,7 +549,7 @@ const EventsPage = () => {
                     {/* Event Content */}
                     <div className="p-6 space-y-4">
                       <div>
-                        <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                        <h3 className="text-xl font-bold text-white mb-2">
                           {event.title}
                         </h3>
                         <p className="text-white/70 text-sm line-clamp-2">
@@ -599,8 +599,8 @@ const EventsPage = () => {
                         }}
                         disabled={event.status === 'closed'}
                         className={`w-full py-3 rounded-xl font-semibold transition-all ${event.status === 'open'
-                            ? 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white shadow-lg shadow-blue-500/30'
-                            : 'bg-white/10 text-white/50 cursor-not-allowed'
+                          ? 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white shadow-lg shadow-blue-500/30'
+                          : 'bg-white/10 text-white/50 cursor-not-allowed'
                           }`}
                       >
                         {event.status === 'open' ? 'Register Now' : 'Registration Closed'}
@@ -623,7 +623,7 @@ const EventsPage = () => {
           {activeTab === "create" && isAdmin && (
             <div className="max-w-4xl mx-auto animate-fadeIn">
               <div className="p-6 sm:p-8 rounded-2xl glass-effect">
-                <h2 className="text-3xl font-bold text-white mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <h2 className="text-3xl font-bold text-white mb-6">
                   Create New Event
                 </h2>
 
@@ -820,7 +820,7 @@ const EventsPage = () => {
                 </button>
                 <div className="absolute bottom-6 left-6 right-6">
                   <div className="flex items-start justify-between gap-4 flex-wrap">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-white">
                       {selectedEvent.title}
                     </h2>
                     <span className={`status-badge ${selectedEvent.status === 'open' ? 'status-open' : 'status-closed'}`}>
@@ -926,8 +926,8 @@ const EventsPage = () => {
                     }}
                     disabled={selectedEvent.status === 'closed'}
                     className={`flex-1 py-4 rounded-xl font-bold transition-all ${selectedEvent.status === 'open'
-                        ? 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white shadow-lg shadow-blue-500/30'
-                        : 'bg-white/10 text-white/50 cursor-not-allowed'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white shadow-lg shadow-blue-500/30'
+                      : 'bg-white/10 text-white/50 cursor-not-allowed'
                       }`}
                   >
                     {selectedEvent.status === 'open' ? 'Register for Event' : 'Registration Closed'}

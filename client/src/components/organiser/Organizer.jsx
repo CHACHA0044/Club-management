@@ -287,7 +287,7 @@ const Organizer = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
         
         * {
           margin: 0;
@@ -453,7 +453,7 @@ const Organizer = () => {
 
       <div className="min-h-screen" style={{
         background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #1e40af 100%)',
-        fontFamily: "'Inter', sans-serif"
+        fontFamily: "'Nunito', sans-serif"
       }}>
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute inset-0 opacity-20">
@@ -472,7 +472,7 @@ const Organizer = () => {
 
         <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
           <div className="mb-8 animate-slideDown">
-            <h1 className="text-4xl md:text-5xl font-black text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h1 className="text-4xl md:text-5xl font-black text-white mb-2">
               <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 bg-clip-text text-transparent">
                 Organizer Dashboard
               </span>
@@ -532,8 +532,8 @@ const Organizer = () => {
             <button
               onClick={() => setActiveTab("myEvents")}
               className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === "myEvents"
-                  ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
-                  : "bg-white/5 text-white/70 hover:bg-white/10"
+                ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
+                : "bg-white/5 text-white/70 hover:bg-white/10"
                 }`}
             >
               <span className="flex items-center justify-center gap-2">
@@ -547,8 +547,8 @@ const Organizer = () => {
             <button
               onClick={() => setActiveTab("approvals")}
               className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all relative ${activeTab === "approvals"
-                  ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
-                  : "bg-white/5 text-white/70 hover:bg-white/10"
+                ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
+                : "bg-white/5 text-white/70 hover:bg-white/10"
                 }`}
             >
               <span className="flex items-center justify-center gap-2">
@@ -609,7 +609,7 @@ const Organizer = () => {
 
                       <div className="p-6 space-y-4">
                         <div>
-                          <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                          <h3 className="text-xl font-bold text-white mb-2">
                             {event.title}
                           </h3>
                           <p className="text-white/70 text-sm line-clamp-2">
@@ -678,7 +678,7 @@ const Organizer = () => {
                       </svg>
                       Back to All Events
                     </button>
-                    <h2 className="text-3xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    <h2 className="text-3xl font-bold text-white">
                       {selectedEvent.title}
                     </h2>
                     <p className="text-white/70 mt-2">Registrations: {getEventRegistrations(selectedEvent.id).length}</p>
@@ -754,7 +754,7 @@ const Organizer = () => {
                       className="event-card glass-effect rounded-2xl p-6 cursor-pointer animate-scaleIn"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      <h3 className="text-xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+                      <h3 className="text-xl font-bold text-white mb-4">
                         {event.title}
                       </h3>
                       <div className="space-y-3 text-white/70">
@@ -795,7 +795,7 @@ const Organizer = () => {
             >
               <div className="p-6 sm:p-8">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-3xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  <h2 className="text-3xl font-bold text-white">
                     Create New Event
                   </h2>
                   <button

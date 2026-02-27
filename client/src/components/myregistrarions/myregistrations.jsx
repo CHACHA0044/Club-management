@@ -54,7 +54,7 @@ const MyRegistrations = () => {
       <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-12 px-4 md:px-12 lg:px-32">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-black text-blue-900 mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>My Registrations</h1>
+          <h1 className="text-4xl md:text-5xl font-black text-blue-900 mb-2">My Registrations</h1>
           <p className="text-lg text-gray-600 mb-8">Track your event registrations and their status</p>
 
           {registrations.length > 0 ? (
@@ -71,7 +71,7 @@ const MyRegistrations = () => {
                     <div className="flex-1 p-6 flex flex-col justify-between">
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-2xl font-bold text-blue-900" style={{ fontFamily: "'Playfair Display', serif" }}>{event.title}</h3>
+                          <h3 className="text-2xl font-bold text-blue-900">{event.title}</h3>
                           <span className={`font-semibold flex items-center gap-1 ${status.color}`}>
                             <span>{status.icon}</span> {status.text}
                           </span>

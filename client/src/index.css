@@ -13,6 +13,7 @@ body {
   padding: 0;
   width: 100%;
   overflow-x: hidden;
+  font-family: "Nunito", ui-sans-serif, system-ui, sans-serif;
 }
 
 
@@ -88,6 +89,7 @@ body {
     opacity: 0;
     transform: translateY(40px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -98,32 +100,39 @@ body {
   0% {
     opacity: 0;
   }
+
   100% {
     opacity: 1;
   }
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translate3d(0, 0, 0);
   }
+
   25% {
     transform: translate3d(5px, -15px, 0);
   }
+
   50% {
     transform: translate3d(-5px, -25px, 0);
   }
+
   75% {
     transform: translate3d(8px, -10px, 0);
   }
 }
 
 @keyframes shimmer {
+
   0%,
   100% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
@@ -253,18 +262,23 @@ button[type="submit"]:active {
 /* =========================
    Accessibility
 ========================= */
-button:focus,
-a:focus,
+/* Only show ring on keyboard navigation, not mouse clicks */
+button:focus-visible,
+a:focus-visible {
+  @apply outline-none ring-2 ring-blue-400 ring-offset-2 ring-offset-transparent;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
-  @apply outline-none ring-4 ring-blue-300 ring-offset-2;
+  @apply outline-none ring-2 ring-blue-300 ring-offset-0;
 }
 
 /* =========================
    Reduced Motion
 ========================= */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

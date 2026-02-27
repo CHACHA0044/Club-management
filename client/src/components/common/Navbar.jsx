@@ -7,7 +7,7 @@ const Navbar = ({ user, isLoggedIn }) => {
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
   const isOrganizer = user?.role === "organizer" || user?.role === "admin";
   const isStudent = user?.role === "student";
 
@@ -35,15 +35,14 @@ const Navbar = ({ user, isLoggedIn }) => {
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled 
-          ? 'bg-blue-950/80 backdrop-blur-xl shadow-lg shadow-blue-900/20' 
-          : 'bg-transparent'
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 font-['Nunito',sans-serif] ${scrolled
+          ? 'bg-blue-950/90 backdrop-blur-xl shadow-lg shadow-blue-900/30'
+          : 'bg-blue-950/20 backdrop-blur-sm'
+        }`}
     >
       <div className=" mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          
+
           <motion.button
             onClick={() => navigate("/")}
             className="group flex items-center gap-2 focus:outline-none"
@@ -55,10 +54,10 @@ const Navbar = ({ user, isLoggedIn }) => {
               whileHover={{ rotate: 12 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <svg 
-                className="w-7 h-7 text-white group-hover:text-blue-300 transition-colors" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="w-7 h-7 text-white group-hover:text-blue-300 transition-colors"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -77,11 +76,10 @@ const Navbar = ({ user, isLoggedIn }) => {
                   <>
                     <motion.button
                       onClick={() => navigate("/organizer")}
-                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-all relative ${
-                        isActive("/organizer") 
-                          ? "text-white bg-white/10" 
+                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-all relative ${isActive("/organizer")
+                          ? "text-white bg-white/10"
                           : "text-white/80 hover:text-white hover:bg-white/5"
-                      }`}
+                        }`}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -96,11 +94,10 @@ const Navbar = ({ user, isLoggedIn }) => {
                     </motion.button>
                     <motion.button
                       onClick={() => navigate("/events")}
-                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-all relative ${
-                        isActive("/events") 
-                          ? "text-white bg-white/10" 
+                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-all relative ${isActive("/events")
+                          ? "text-white bg-white/10"
                           : "text-white/80 hover:text-white hover:bg-white/5"
-                      }`}
+                        }`}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -120,11 +117,10 @@ const Navbar = ({ user, isLoggedIn }) => {
                   <>
                     <motion.button
                       onClick={() => navigate("/events")}
-                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-all relative ${
-                        isActive("/events") 
-                          ? "text-white bg-white/10" 
+                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-all relative ${isActive("/events")
+                          ? "text-white bg-white/10"
                           : "text-white/80 hover:text-white hover:bg-white/5"
-                      }`}
+                        }`}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -139,11 +135,10 @@ const Navbar = ({ user, isLoggedIn }) => {
                     </motion.button>
                     <motion.button
                       onClick={() => navigate("/my-registrations")}
-                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-all relative ${
-                        isActive("/my-registrations") 
-                          ? "text-white bg-white/10" 
+                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-all relative ${isActive("/my-registrations")
+                          ? "text-white bg-white/10"
                           : "text-white/80 hover:text-white hover:bg-white/5"
-                      }`}
+                        }`}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -166,14 +161,13 @@ const Navbar = ({ user, isLoggedIn }) => {
                   </div>
 
                   {user?.role && (
-                    <motion.span 
+                    <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className={`px-2.5 py-1 rounded-full text-xs font-bold shadow-lg ${
-                        isOrganizer 
-                          ? 'bg-gradient-to-r from-purple-500 to-purple-700 text-white' 
+                      className={`px-2.5 py-1 rounded-full text-xs font-bold shadow-lg ${isOrganizer
+                          ? 'bg-gradient-to-r from-purple-500 to-purple-700 text-white'
                           : 'bg-gradient-to-r from-green-500 to-green-700 text-white'
-                      }`}
+                        }`}
                     >
                       {isOrganizer ? '🎯' : '🎓'}
                     </motion.span>
@@ -213,19 +207,18 @@ const Navbar = ({ user, isLoggedIn }) => {
 
           <div className="flex lg:hidden items-center gap-2">
             {isLoggedIn && user?.role && (
-              <motion.span 
+              <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className={`px-2 py-1 rounded-full text-xs font-bold ${
-                  isOrganizer 
-                    ? 'bg-gradient-to-r from-purple-500 to-purple-700 text-white' 
+                className={`px-2 py-1 rounded-full text-xs font-bold ${isOrganizer
+                    ? 'bg-gradient-to-r from-purple-500 to-purple-700 text-white'
                     : 'bg-gradient-to-r from-green-500 to-green-700 text-white'
-                }`}
+                  }`}
               >
                 {isOrganizer ? '🎯' : '🎓'}
               </motion.span>
             )}
-            
+
             <motion.button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 text-white hover:bg-white/10 rounded-lg transition-all"
@@ -249,7 +242,7 @@ const Navbar = ({ user, isLoggedIn }) => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden py-4 border-t border-white/10 overflow-hidden"
+              className="lg:hidden py-4 border-t border-white/10 overflow-hidden bg-blue-950/95 backdrop-blur-xl rounded-b-2xl"
             >
               {isLoggedIn ? (
                 <div className="flex flex-col gap-2">
@@ -261,11 +254,10 @@ const Navbar = ({ user, isLoggedIn }) => {
                     <>
                       <motion.button
                         onClick={() => navigate("/organizer")}
-                        className={`px-4 py-2.5 text-sm font-medium rounded-lg text-left ${
-                          isActive("/organizer") 
-                            ? "text-white bg-white/10" 
+                        className={`px-4 py-2.5 text-sm font-medium rounded-lg text-left ${isActive("/organizer")
+                            ? "text-white bg-white/10"
                             : "text-white/80 hover:text-white hover:bg-white/5"
-                        }`}
+                          }`}
                         whileHover={{ x: 4 }}
                         whileTap={{ scale: 0.98 }}
                       >
@@ -273,11 +265,10 @@ const Navbar = ({ user, isLoggedIn }) => {
                       </motion.button>
                       <motion.button
                         onClick={() => navigate("/events")}
-                        className={`px-4 py-2.5 text-sm font-medium rounded-lg text-left ${
-                          isActive("/events") 
-                            ? "text-white bg-white/10" 
+                        className={`px-4 py-2.5 text-sm font-medium rounded-lg text-left ${isActive("/events")
+                            ? "text-white bg-white/10"
                             : "text-white/80 hover:text-white hover:bg-white/5"
-                        }`}
+                          }`}
                         whileHover={{ x: 4 }}
                         whileTap={{ scale: 0.98 }}
                       >
@@ -290,11 +281,10 @@ const Navbar = ({ user, isLoggedIn }) => {
                     <>
                       <motion.button
                         onClick={() => navigate("/events")}
-                        className={`px-4 py-2.5 text-sm font-medium rounded-lg text-left ${
-                          isActive("/events") 
-                            ? "text-white bg-white/10" 
+                        className={`px-4 py-2.5 text-sm font-medium rounded-lg text-left ${isActive("/events")
+                            ? "text-white bg-white/10"
                             : "text-white/80 hover:text-white hover:bg-white/5"
-                        }`}
+                          }`}
                         whileHover={{ x: 4 }}
                         whileTap={{ scale: 0.98 }}
                       >
@@ -302,11 +292,10 @@ const Navbar = ({ user, isLoggedIn }) => {
                       </motion.button>
                       <motion.button
                         onClick={() => navigate("/my-registrations")}
-                        className={`px-4 py-2.5 text-sm font-medium rounded-lg text-left ${
-                          isActive("/my-registrations") 
-                            ? "text-white bg-white/10" 
+                        className={`px-4 py-2.5 text-sm font-medium rounded-lg text-left ${isActive("/my-registrations")
+                            ? "text-white bg-white/10"
                             : "text-white/80 hover:text-white hover:bg-white/5"
-                        }`}
+                          }`}
                         whileHover={{ x: 4 }}
                         whileTap={{ scale: 0.98 }}
                       >
