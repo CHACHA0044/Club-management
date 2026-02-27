@@ -9,7 +9,7 @@ const EventsPage = () => {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
-  
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -26,19 +26,21 @@ const EventsPage = () => {
   const user = JSON.parse(sessionStorage.getItem("user") || localStorage.getItem("user") || "null");
   const isLoggedIn = !!(sessionStorage.getItem("token") || localStorage.getItem("token"));
   const isAdmin = user?.role === "admin";
-useEffect(() => {
-  const fetchEvents = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/events");
-      const data = await response.json();
-      setEvents(data);
-    } catch (error) {
-      console.error("Error fetching events:", error);
-    }
-  };
-  
-  fetchEvents();
-}, []);
+  const API_URL = process.env.REACT_APP_API_URL || "/api";
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch(`${API_URL}/events`);
+        const data = await response.json();
+        setEvents(data);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    };
+
+    fetchEvents();
+  }, []);
   // const mockEvents = [
   //   {
   //     id: 1,
@@ -144,7 +146,7 @@ useEffect(() => {
 
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchQuery.toLowerCase());
+      event.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = filterCategory === "all" || event.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
@@ -157,7 +159,7 @@ useEffect(() => {
   const handleSubmitEvent = (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     setTimeout(() => {
       const newEvent = {
         id: events.length + 1,
@@ -167,7 +169,7 @@ useEffect(() => {
         tags: formData.tags.split(",").map(tag => tag.trim()),
         image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80"
       };
-      
+
       setEvents([newEvent, ...events]);
       setFormData({
         title: "",
@@ -187,32 +189,32 @@ useEffect(() => {
     }, 1000);
   };
 
-const handleRegister = async (eventId) => {
-  if (!isLoggedIn) {
-    navigate("/login");
-    return;
-  }
-  
-  try {
-    const token = sessionStorage.getItem("token") || localStorage.getItem("token");
-    const response = await fetch(`http://localhost:5000/api/events/${eventId}/register`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-      },
-    });
-
-    if (response.ok) {
-      alert("Successfully registered for event!");
-    } else {
-      const data = await response.json();
-      alert(data.message || "Failed to register");
+  const handleRegister = async (eventId) => {
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
     }
-  } catch (error) {
-    console.error("Error registering:", error);
-    alert("Failed to register for event");
-  }
-};
+
+    try {
+      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+      const response = await fetch(`${API_URL}/events/${eventId}/register`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        alert("Successfully registered for event!");
+      } else {
+        const data = await response.json();
+        alert(data.message || "Failed to register");
+      }
+    } catch (error) {
+      console.error("Error registering:", error);
+      alert("Failed to register for event");
+    }
+  };
 
   return (
     <>
@@ -375,7 +377,7 @@ const handleRegister = async (eventId) => {
         }
       `}</style>
 
-      <div className="min-h-screen" style={{ 
+      <div className="min-h-screen" style={{
         background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #1e40af 100%)',
         fontFamily: "'Inter', sans-serif"
       }}>
@@ -386,7 +388,7 @@ const handleRegister = async (eventId) => {
             <div className="absolute bottom-20 left-20 w-80 h-80 bg-white rounded-full filter blur-3xl animate-float" style={{ animationDelay: '0.3s' }}></div>
             <div className="absolute top-1/2 right-1/3 w-72 h-72 bg-blue-300 rounded-full filter blur-3xl animate-float" style={{ animationDelay: '0.6s' }}></div>
           </div>
-          
+
           <div className="absolute inset-0 opacity-10" style={{
             backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
             backgroundSize: '50px 50px'
@@ -450,18 +452,17 @@ const handleRegister = async (eventId) => {
             </div>
           </div>
         </header> */}
-<Navbar user={user} isLoggedIn={isLoggedIn} />
+        <Navbar user={user} isLoggedIn={isLoggedIn} />
         {/* Main Content */}
         <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Tabs */}
           <div className="flex flex-wrap gap-3 mb-8 p-2 rounded-2xl glass-effect animate-slideDown">
             <button
               onClick={() => setActiveTab("browse")}
-              className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all ${
-                activeTab === "browse"
+              className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === "browse"
                   ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
                   : "bg-white/5 text-white/70 hover:bg-white/10"
-              }`}
+                }`}
             >
               <span className="flex items-center justify-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -470,15 +471,14 @@ const handleRegister = async (eventId) => {
                 Browse Events
               </span>
             </button>
-            
+
             {isAdmin && (
               <button
                 onClick={() => setActiveTab("create")}
-                className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all ${
-                  activeTab === "create"
+                className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === "create"
                     ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
                     : "bg-white/5 text-white/70 hover:bg-white/10"
-                }`}
+                  }`}
               >
                 <span className="flex items-center justify-center gap-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -507,7 +507,7 @@ const handleRegister = async (eventId) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
-                
+
                 <select
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value)}
@@ -534,10 +534,10 @@ const handleRegister = async (eventId) => {
                     {/* Event Image */}
                     <div className="relative h-48 overflow-hidden">
                       <img
-  src={event.photo || event.image}
-  alt={event.title}
-  className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-/>
+                        src={event.photo || event.image}
+                        alt={event.title}
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                      />
                       <div className="absolute top-4 right-4">
                         <span className={`status-badge ${event.status === 'open' ? 'status-open' : 'status-closed'}`}>
                           {event.status}
@@ -598,11 +598,10 @@ const handleRegister = async (eventId) => {
                           handleRegister(event._id);
                         }}
                         disabled={event.status === 'closed'}
-                        className={`w-full py-3 rounded-xl font-semibold transition-all ${
-                          event.status === 'open'
+                        className={`w-full py-3 rounded-xl font-semibold transition-all ${event.status === 'open'
                             ? 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white shadow-lg shadow-blue-500/30'
                             : 'bg-white/10 text-white/50 cursor-not-allowed'
-                        }`}
+                          }`}
                       >
                         {event.status === 'open' ? 'Register Now' : 'Registration Closed'}
                       </button>
@@ -806,10 +805,10 @@ const handleRegister = async (eventId) => {
             >
               <div className="relative h-64 sm:h-80 overflow-hidden">
                 <img
-  src={selectedEvent.photo || selectedEvent.image}
-  alt={selectedEvent.title}
-  className="w-full h-full object-cover"
-/>
+                  src={selectedEvent.photo || selectedEvent.image}
+                  alt={selectedEvent.title}
+                  className="w-full h-full object-cover"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
                 <button
                   onClick={() => setSelectedEvent(null)}
@@ -926,11 +925,10 @@ const handleRegister = async (eventId) => {
                       setSelectedEvent(null);
                     }}
                     disabled={selectedEvent.status === 'closed'}
-                    className={`flex-1 py-4 rounded-xl font-bold transition-all ${
-                      selectedEvent.status === 'open'
+                    className={`flex-1 py-4 rounded-xl font-bold transition-all ${selectedEvent.status === 'open'
                         ? 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white shadow-lg shadow-blue-500/30'
                         : 'bg-white/10 text-white/50 cursor-not-allowed'
-                    }`}
+                      }`}
                   >
                     {selectedEvent.status === 'open' ? 'Register for Event' : 'Registration Closed'}
                   </button>

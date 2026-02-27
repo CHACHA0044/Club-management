@@ -12,7 +12,7 @@ const Organizer = () => {
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -31,7 +31,7 @@ const Organizer = () => {
     try {
       const sessionUser = sessionStorage.getItem("user");
       const localUser = localStorage.getItem("user");
-      
+
       if (sessionUser) {
         return JSON.parse(sessionUser);
       }
@@ -49,213 +49,76 @@ const Organizer = () => {
   const token = sessionStorage.getItem("token") || localStorage.getItem("token");
   const isLoggedIn = !!token;
 
-  const mockOrganizerEvents = [
-    {
-      id: 1,
-      title: "Web Development Bootcamp",
-      description: "Learn modern web development with React, Node.js, and MongoDB.",
-      category: "workshop",
-      date: "2026-02-15",
-      time: "10:00 AM",
-      location: "Room 301, Tech Building",
-      maxParticipants: 50,
-      currentParticipants: 32,
-      organizer: user?.name || "Tech Club",
-      organizerId: user?.id || 1,
-      requirements: "Laptop required",
-      tags: ["web", "react", "nodejs"],
-      status: "open",
-      image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80"
-    },
-    {
-      id: 5,
-      title: "Hackathon 2026",
-      description: "24-hour coding marathon to build innovative solutions.",
-      category: "competition",
-      date: "2026-03-15",
-      time: "9:00 AM",
-      location: "Computer Lab",
-      maxParticipants: 100,
-      currentParticipants: 67,
-      organizer: user?.name || "Coding Club",
-      organizerId: user?.id || 1,
-      requirements: "Team of 3-4 members",
-      tags: ["hackathon", "coding", "competition"],
-      status: "open",
-      image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80"
-    }
-  ];
+  // API configuration
+  const API_URL = process.env.REACT_APP_API_URL || "/api";
 
-  const mockOrganizerRegistrations = [
-    {
-      id: 201,
-      eventId: 1,
-      userId: 2,
-      userName: "Alice Johnson",
-      userEmail: "alice@university.edu",
-      status: "pending",
-      registeredAt: "2026-01-25T10:30:00"
-    },
-    {
-      id: 202,
-      eventId: 1,
-      userId: 3,
-      userName: "Bob Smith",
-      userEmail: "bob@university.edu",
-      status: "confirmed",
-      registeredAt: "2026-01-24T14:20:00"
-    },
-    {
-      id: 203,
-      eventId: 1,
-      userId: 4,
-      userName: "Carol Williams",
-      userEmail: "carol@university.edu",
-      status: "pending",
-      registeredAt: "2026-01-26T09:15:00"
-    },
-    {
-      id: 204,
-      eventId: 5,
-      userId: 5,
-      userName: "David Brown",
-      userEmail: "david@university.edu",
-      status: "confirmed",
-      registeredAt: "2026-01-23T16:45:00"
-    },
-    {
-      id: 205,
-      eventId: 5,
-      userId: 6,
-      userName: "Emma Davis",
-      userEmail: "emma@university.edu",
-      status: "pending",
-      registeredAt: "2026-01-27T11:30:00"
-    }
-  ];
 
-// Remove the FIRST useEffect (lines 131-148) completely
-// Keep only ONE useEffect like this:
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!token || !user) {
+        navigate("/login");
+        return;
+      }
 
-useEffect(() => {
-  const checkAuth = async () => {
-    if (!isLoggedIn || !user) {
-      navigate("/login");
-      return;
-    }
+      if (user.role !== "admin" && user.role !== "organizer") {
+        alert("Access denied. This page is only for organizers.");
+        navigate("/");
+        return;
+      }
 
-    if (user.role !== "admin" && user.role !== "organizer") {
-      alert("Access denied. This page is only for organizers.");
-      navigate("/");
-      return;
-    }
+      try {
+        // Fetch events
+        const response = await fetch(`${API_URL}/events`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const eventsData = await response.json();
 
+        // Fetch registrations
+        const regsResponse = await fetch(`${API_URL}/events/registrations/all`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const regsData = await regsResponse.json();
+
+        // Add currentParticipants count to each event
+        const eventsWithCounts = eventsData.map(event => ({
+          ...event,
+          id: event._id,
+          currentParticipants: regsData.filter(reg =>
+            reg.eventId === event._id && reg.status === 'confirmed'
+          ).length,
+          status: 'open'
+        }));
+
+        setEvents(eventsWithCounts);
+        setRegistrations(regsData);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [token, user, navigate, API_URL]);
+  const testEmail = async () => {
     try {
-      // Fetch events
-      const response = await fetch("http://localhost:5000/api/events", {
+      const response = await fetch(`${API_URL}/events/test-email`, {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      const eventsData = await response.json();
-      
-      // Fetch registrations
-      const regsResponse = await fetch("http://localhost:5000/api/events/registrations/all", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const regsData = await regsResponse.json();
-      
-      console.log("Events:", eventsData);
-      console.log("Registrations:", regsData);
-      
-      // Add currentParticipants count to each event
-      const eventsWithCounts = eventsData.map(event => ({
-        ...event,
-        id: event._id, // Add id field for compatibility
-        currentParticipants: regsData.filter(reg => 
-          reg.eventId === event._id && reg.status === 'confirmed'
-        ).length,
-        status: 'open' // Add default status
-      }));
-      
-      setEvents(eventsWithCounts);
-      setRegistrations(regsData);
-      setIsLoading(false);
+      const data = await response.json();
+      alert(data.message);
     } catch (error) {
-      console.error("Error fetching events:", error);
-      setIsLoading(false);
+      console.error("Test email error:", error);
+      alert("Failed to send test email");
     }
   };
-
-  checkAuth();
-}, []);
-
-useEffect(() => {
-  const checkAuth = async () => {
-    if (!isLoggedIn || !user) {
-      navigate("/login");
-      return;
-    }
-
-    if (user.role !== "admin" && user.role !== "organizer") {
-      alert("Access denied. This page is only for organizers.");
-      navigate("/");
-      return;
-    }
-
-    try {
-      // Fetch events
-      const response = await fetch("http://localhost:5000/api/events", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const eventsData = await response.json();
-      
-      // Fetch registrations
-      const regsResponse = await fetch("http://localhost:5000/api/events/registrations/all", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const regsData = await regsResponse.json();
-      
-      // Add currentParticipants count to each event
-      const eventsWithCounts = eventsData.map(event => ({
-        ...event,
-        currentParticipants: regsData.filter(reg => 
-          reg.eventId === event._id && reg.status === 'confirmed'
-        ).length
-      }));
-      
-      setEvents(eventsWithCounts);
-      setRegistrations(regsData);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error fetching events:", error);
-      setIsLoading(false);
-    }
-  };
-
-  checkAuth();
-}, []);
-const testEmail = async () => {
-  try {
-    const response = await fetch("http://localhost:5000/api/events/test-email", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const data = await response.json();
-    alert(data.message);
-  } catch (error) {
-    console.error("Test email error:", error);
-    alert("Failed to send test email");
-  }
-};
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -274,143 +137,143 @@ const testEmail = async () => {
     }
   };
 
-const handleCreateEvent = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+  const handleCreateEvent = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    const dateTime = new Date(`${formData.date}T${formData.time}`).toISOString();
-    
-    const response = await fetch("http://localhost:5000/api/events", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        title: formData.title,
-        description: formData.description,
-        dateTime: dateTime,
-        place: formData.location,
-        photo: formData.image,
-        category: formData.category,
-        maxParticipants: formData.maxParticipants,
-        requirements: formData.requirements,
-        tags: formData.tags.split(',').map(tag => tag.trim()),
-      }),
+    try {
+      const dateTime = new Date(`${formData.date}T${formData.time}`).toISOString();
+
+      const response = await fetch(`${API_URL}/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description,
+          dateTime: dateTime,
+          place: formData.location,
+          photo: formData.image,
+          category: formData.category,
+          maxParticipants: formData.maxParticipants,
+          requirements: formData.requirements,
+          tags: formData.tags.split(',').map(tag => tag.trim()),
+        }),
+      });
+
+      if (response.ok) {
+        const newEvent = await response.json();
+        setEvents([...events, newEvent.event]);
+        setShowCreateModal(false);
+        setFormData({
+          title: "",
+          description: "",
+          category: "workshop",
+          date: "",
+          time: "",
+          location: "",
+          maxParticipants: "",
+          organizer: "",
+          requirements: "",
+          tags: "",
+          image: ""
+        });
+        setImagePreview(null);
+        alert("Event created successfully!");
+      }
+    } catch (error) {
+      console.error("Error creating event:", error);
+      alert("Failed to create event");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApproveRegistration = async (regId, eventId) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/events/${eventId}/registrations/${regId}/approve`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        // Refresh registrations
+        const regsResponse = await fetch(`${API_URL}/events/registrations/all`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const regsData = await regsResponse.json();
+        setRegistrations(regsData);
+
+        alert("Registration approved!");
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to approve: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error("Error approving registration:", error);
+      alert("Failed to approve registration");
+    }
+  };
+
+  const handleRejectRegistration = async (regId, eventId) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/events/${eventId}/registrations/${regId}/reject`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        // Refresh registrations
+        const regsResponse = await fetch(`${API_URL}/events/registrations/all`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const regsData = await regsResponse.json();
+        setRegistrations(regsData);
+
+        alert("Registration rejected!");
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to reject: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error("Error rejecting registration:", error);
+      alert("Failed to reject registration");
+    }
+  };
+
+  const getEventRegistrations = (eventId) => {
+    console.log("Getting registrations for event:", eventId);
+    console.log("All registrations:", registrations);
+    const filtered = registrations.filter(reg => {
+      console.log(`Comparing reg.eventId ${reg.eventId} with ${eventId}`);
+      return reg.eventId === eventId || reg.event?._id === eventId;
     });
+    console.log("Filtered registrations:", filtered);
+    return filtered;
+  };
 
-    if (response.ok) {
-      const newEvent = await response.json();
-      setEvents([...events, newEvent.event]);
-      setShowCreateModal(false);
-      setFormData({
-        title: "",
-        description: "",
-        category: "workshop",
-        date: "",
-        time: "",
-        location: "",
-        maxParticipants: "",
-        organizer: "",
-        requirements: "",
-        tags: "",
-        image: ""
-      });
-      setImagePreview(null);
-      alert("Event created successfully!");
-    }
-  } catch (error) {
-    console.error("Error creating event:", error);
-    alert("Failed to create event");
-  } finally {
-    setLoading(false);
-  }
-};
-
-const handleApproveRegistration = async (regId, eventId) => {
-  try {
-    const response = await fetch(
-      `http://localhost:5000/api/events/${eventId}/registrations/${regId}/approve`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (response.ok) {
-      // Refresh registrations
-      const regsResponse = await fetch("http://localhost:5000/api/events/registrations/all", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const regsData = await regsResponse.json();
-      setRegistrations(regsData);
-      
-      alert("Registration approved!");
-    } else {
-      const errorData = await response.json();
-      alert(`Failed to approve: ${errorData.message}`);
-    }
-  } catch (error) {
-    console.error("Error approving registration:", error);
-    alert("Failed to approve registration");
-  }
-};
-
-const handleRejectRegistration = async (regId, eventId) => {
-  try {
-    const response = await fetch(
-      `http://localhost:5000/api/events/${eventId}/registrations/${regId}/reject`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (response.ok) {
-      // Refresh registrations
-      const regsResponse = await fetch("http://localhost:5000/api/events/registrations/all", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const regsData = await regsResponse.json();
-      setRegistrations(regsData);
-      
-      alert("Registration rejected!");
-    } else {
-      const errorData = await response.json();
-      alert(`Failed to reject: ${errorData.message}`);
-    }
-  } catch (error) {
-    console.error("Error rejecting registration:", error);
-    alert("Failed to reject registration");
-  }
-};
-
-const getEventRegistrations = (eventId) => {
-  console.log("Getting registrations for event:", eventId);
-  console.log("All registrations:", registrations);
-  const filtered = registrations.filter(reg => {
-    console.log(`Comparing reg.eventId ${reg.eventId} with ${eventId}`);
-    return reg.eventId === eventId || reg.event?._id === eventId;
-  });
-  console.log("Filtered registrations:", filtered);
-  return filtered;
-};
-
-const getPendingCount = (eventId) => {
-  return registrations.filter(reg => 
-    (reg.eventId === eventId || reg.event?._id === eventId) && 
-    reg.status === "pending"
-  ).length;
-};
+  const getPendingCount = (eventId) => {
+    return registrations.filter(reg =>
+      (reg.eventId === eventId || reg.event?._id === eventId) &&
+      reg.status === "pending"
+    ).length;
+  };
 
 
   if (isLoading) {
@@ -588,7 +451,7 @@ const getPendingCount = (eventId) => {
         }
       `}</style>
 
-      <div className="min-h-screen" style={{ 
+      <div className="min-h-screen" style={{
         background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #1e40af 100%)',
         fontFamily: "'Inter', sans-serif"
       }}>
@@ -598,7 +461,7 @@ const getPendingCount = (eventId) => {
             <div className="absolute bottom-20 left-20 w-80 h-80 bg-white rounded-full filter blur-3xl animate-float" style={{ animationDelay: '0.3s' }}></div>
             <div className="absolute top-1/2 right-1/3 w-72 h-72 bg-blue-300 rounded-full filter blur-3xl animate-float" style={{ animationDelay: '0.6s' }}></div>
           </div>
-          
+
           <div className="absolute inset-0 opacity-10" style={{
             backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
             backgroundSize: '50px 50px'
@@ -668,11 +531,10 @@ const getPendingCount = (eventId) => {
           <div className="flex flex-wrap gap-3 mb-8 p-2 rounded-2xl glass-effect animate-slideDown" style={{ animationDelay: '0.2s' }}>
             <button
               onClick={() => setActiveTab("myEvents")}
-              className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all ${
-                activeTab === "myEvents"
+              className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === "myEvents"
                   ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
                   : "bg-white/5 text-white/70 hover:bg-white/10"
-              }`}
+                }`}
             >
               <span className="flex items-center justify-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -681,14 +543,13 @@ const getPendingCount = (eventId) => {
                 My Events
               </span>
             </button>
-            
+
             <button
               onClick={() => setActiveTab("approvals")}
-              className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all relative ${
-                activeTab === "approvals"
+              className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all relative ${activeTab === "approvals"
                   ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
                   : "bg-white/5 text-white/70 hover:bg-white/10"
-              }`}
+                }`}
             >
               <span className="flex items-center justify-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -838,40 +699,40 @@ const getPendingCount = (eventId) => {
                               </div>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-white/70 mt-3">
-  <span className="flex items-center gap-1">
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
-    {new Date(reg.registeredAt).toLocaleDateString()}
-  </span>
-  <span className={`status-badge status-${reg.status}`}>
-    {reg.status}
-  </span>
-</div>
+                              <span className="flex items-center gap-1">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                {new Date(reg.registeredAt).toLocaleDateString()}
+                              </span>
+                              <span className={`status-badge status-${reg.status}`}>
+                                {reg.status}
+                              </span>
+                            </div>
                           </div>
 
-{reg.status === "pending" && (
-  <div className="flex gap-3">
-    <button
-      onClick={() => handleApproveRegistration(reg.id, selectedEvent._id)}
-      className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-white rounded-xl font-semibold shadow-lg transition-all flex items-center gap-2"
-    >
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-      </svg>
-      Approve
-    </button>
-    <button
-      onClick={() => handleRejectRegistration(reg.id, selectedEvent._id)}
-      className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white rounded-xl font-semibold shadow-lg transition-all flex items-center gap-2"
-    >
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-      </svg>
-      Reject
-    </button>
-  </div>
-)}
+                          {reg.status === "pending" && (
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => handleApproveRegistration(reg.id, selectedEvent._id)}
+                                className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-white rounded-xl font-semibold shadow-lg transition-all flex items-center gap-2"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleRejectRegistration(reg.id, selectedEvent._id)}
+                                className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white rounded-xl font-semibold shadow-lg transition-all flex items-center gap-2"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Reject
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}

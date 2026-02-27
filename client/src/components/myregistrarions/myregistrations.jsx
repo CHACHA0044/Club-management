@@ -3,44 +3,8 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../common/Navbar";
 import { useNavigate } from "react-router-dom";
 
-// Mock events and registrations (replace with API calls in production)
-const mockEvents = [
-  {
-    id: 1,
-    title: "Web Development Bootcamp",
-    category: "workshop",
-    date: "2026-02-15T10:00:00",
-    location: "Room 301, Tech Building",
-    organizer: "Tech Club",
-    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80"
-  },
-  {
-    id: 2,
-    title: "AI/ML Workshop Series",
-    category: "workshop",
-    date: "2026-02-20T14:00:00",
-    location: "Lab 204, Science Building",
-    organizer: "AI Research Club",
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80"
-  }
-];
+// Status map for registrations
 
-const mockRegistrations = [
-  {
-    id: 101,
-    userId: 1,
-    eventId: 1,
-    status: "confirmed",
-    registeredAt: "2026-01-20T09:00:00"
-  },
-  {
-    id: 102,
-    userId: 1,
-    eventId: 2,
-    status: "pending",
-    registeredAt: "2026-01-22T11:00:00"
-  }
-];
 
 const statusMap = {
   pending: { icon: "⏳", text: "Pending Approval", color: "text-yellow-600" },
@@ -52,35 +16,36 @@ const MyRegistrations = () => {
   const navigate = useNavigate();
   const [registrations, setRegistrations] = useState([]);
   const [events, setEvents] = useState([]);
-  const [user, setUser] = useState(null);
 
-useEffect(() => {
-  const fetchData = async () => {
-    const userObj = JSON.parse(sessionStorage.getItem("user") || localStorage.getItem("user") || "null");
-    setUser(userObj);
-    
-    if (!userObj) return;
 
-    try {
-      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
-      const eventsResponse = await fetch("http://localhost:5000/api/events");
-      const eventsData = await eventsResponse.json();
-      setEvents(eventsData);
+  useEffect(() => {
+    const fetchData = async () => {
+      const userObj = JSON.parse(sessionStorage.getItem("user") || localStorage.getItem("user") || "null");
 
-      const regsResponse = await fetch("http://localhost:5000/api/events/registrations/my", {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-      const regsData = await regsResponse.json();
-      setRegistrations(regsData);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
-  
-  fetchData();
-}, []);
+
+      if (!userObj) return;
+
+      try {
+        const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+        const API_URL = process.env.REACT_APP_API_URL || "/api";
+        const eventsResponse = await fetch(`${API_URL}/events`);
+        const eventsData = await eventsResponse.json();
+        setEvents(eventsData);
+
+        const regsResponse = await fetch(`${API_URL}/events/registrations/my`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        const regsData = await regsResponse.json();
+        setRegistrations(regsData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const getEvent = (eventId) => events.find(e => e._id === eventId);
 
