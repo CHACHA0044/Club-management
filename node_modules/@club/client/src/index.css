@@ -1,0 +1,287 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Keep all your existing custom CSS below */
+/* =========================
+   Base styles
+========================= */
+html,
+body {
+  scroll-behavior: smooth;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  @apply bg-white text-slate-800 antialiased;
+}
+
+/* =========================
+   Custom Animations (Utilities)
+========================= */
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 1s ease-out forwards;
+  }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    background-size: 200% 200%;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  .animate-spin-slow {
+    animation: spin 20s linear infinite;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-600 {
+    animation-delay: 600ms;
+  }
+
+  .delay-75 {
+    transition-delay: 75ms;
+  }
+
+  .delay-150 {
+    transition-delay: 150ms;
+  }
+
+  .delay-225 {
+    transition-delay: 225ms;
+  }
+
+  .delay-1000 {
+    animation-delay: 1s;
+  }
+}
+
+/* =========================
+   Keyframes
+========================= */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate3d(5px, -15px, 0);
+  }
+  50% {
+    transform: translate3d(-5px, -25px, 0);
+  }
+  75% {
+    transform: translate3d(8px, -10px, 0);
+  }
+}
+
+@keyframes shimmer {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* =========================
+   Auth Forms
+========================= */
+.login-container,
+.register-container {
+  @apply max-w-md mx-auto my-16 p-8 bg-white rounded-2xl shadow-2xl border border-slate-100;
+}
+
+.login-container h2,
+.register-container h2 {
+  @apply text-center mb-8 text-slate-900 text-3xl font-bold;
+}
+
+.form-group {
+  @apply mb-6;
+}
+
+.form-group label {
+  @apply block mb-2 font-semibold text-slate-700 text-sm uppercase tracking-wide;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  @apply w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-base transition-all duration-300;
+  @apply focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100;
+}
+
+.form-group textarea {
+  @apply min-h-[120px] resize-y;
+}
+
+button[type="submit"] {
+  @apply w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-lg font-bold;
+  @apply transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/50;
+}
+
+button[type="submit"]:active {
+  @apply translate-y-0;
+}
+
+.error {
+  @apply bg-red-50 text-red-800 px-5 py-4 rounded-xl mb-4 border border-red-200 font-medium;
+}
+
+.success {
+  @apply bg-green-50 text-green-800 px-5 py-4 rounded-xl mb-4 border border-green-200 font-medium;
+}
+
+/* =========================
+   Navbar
+========================= */
+.navbar {
+  @apply bg-slate-900 text-white py-4 px-6 md:px-12 flex justify-between items-center shadow-lg;
+}
+
+.nav-brand a {
+  @apply text-white text-2xl font-bold hover:text-blue-400 transition-colors;
+}
+
+.nav-links {
+  @apply flex gap-6 items-center;
+}
+
+.nav-links a {
+  @apply text-white font-medium hover:text-blue-400 transition-colors;
+}
+
+.nav-links button {
+  @apply bg-red-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors;
+}
+
+/* =========================
+   Events
+========================= */
+.events-grid {
+  @apply grid gap-6 mt-8;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.event-card {
+  @apply bg-white p-6 rounded-2xl shadow-lg border border-slate-100;
+  @apply hover:shadow-2xl hover:-translate-y-2 transition-all duration-300;
+}
+
+.event-card img {
+  @apply w-full h-48 object-cover rounded-xl mb-4;
+}
+
+.event-card h3 {
+  @apply text-xl font-bold text-slate-900 mb-2;
+}
+
+.event-card p {
+  @apply text-slate-600 mb-3 leading-relaxed;
+}
+
+.event-card button {
+  @apply w-full py-3 bg-blue-600 text-white rounded-xl font-semibold mt-4;
+  @apply hover:bg-blue-700 transition-colors;
+}
+
+/* =========================
+   Status Badges
+========================= */
+.status-badge {
+  @apply px-4 py-2 rounded-full font-semibold text-sm inline-block capitalize;
+}
+
+.status-pending {
+  @apply bg-amber-100 text-amber-800 border border-amber-300;
+}
+
+.status-confirmed {
+  @apply bg-green-100 text-green-800 border border-green-300;
+}
+
+.status-rejected {
+  @apply bg-red-100 text-red-800 border border-red-300;
+}
+
+/* =========================
+   Accessibility
+========================= */
+button:focus,
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  @apply outline-none ring-4 ring-blue-300 ring-offset-2;
+}
+
+/* =========================
+   Reduced Motion
+========================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =========================
+   Responsive
+========================= */
+@media (max-width: 768px) {
+  .navbar {
+    @apply flex-col gap-4;
+  }
+
+  .nav-links {
+    @apply flex-col gap-3 w-full;
+  }
+
+  .nav-links button {
+    @apply w-full;
+  }
+}

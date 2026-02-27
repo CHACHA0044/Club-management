@@ -1,0 +1,17 @@
+{
+    "name": "club-management",
+    "version": "1.0.0",
+    "description": "Club Management System Monorepo",
+    "private": true,
+    "workspaces": [
+        "server",
+        "client"
+    ],
+    "scripts": {
+        "start": "npm run start --workspace=@club/server",
+        "client": "npm run start --workspace=@club/client",
+        "server": "npm run start --workspace=@club/server",
+        "build": "npm run build --workspace=@club/client",
+        "install-all": "npm install"
+    }
+}
