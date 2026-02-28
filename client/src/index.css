@@ -9,11 +9,25 @@
 html,
 body {
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
   margin: 0;
   padding: 0;
   width: 100%;
   overflow-x: hidden;
   font-family: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Buttery smooth mobile transitions */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  touch-action: manipulation;
 }
 
 
@@ -62,6 +76,17 @@ body {
 
   .animation-delay-600 {
     animation-delay: 600ms;
+  }
+
+  .scroll-reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .scroll-reveal.active {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .delay-75 {

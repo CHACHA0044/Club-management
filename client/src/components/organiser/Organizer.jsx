@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../common/Navbar";
+import ScrollReveal from "../common/ScrollReveal";
+
 
 const Organizer = () => {
   const navigate = useNavigate();
@@ -8,10 +10,56 @@ const Organizer = () => {
   const [events, setEvents] = useState([]);
   const [registrations, setRegistrations] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const formatEventDate = (dateString) => {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    const day = d.getDate();
+    const month = d.toLocaleString('en-US', { month: 'long' }).toLowerCase();
+
+    const getOrdinal = (n) => {
+      const s = ["th", "st", "nd", "rd"];
+      const v = n % 100;
+      return s[(v - 20) % 10] || s[v] || s[0];
+    };
+
+    const time = d.toLocaleString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    return `${day}${getOrdinal(day)} of ${month} , ${time}`;
+  };
+
+  const formatDateOnly = (dateString) => {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    const day = d.getDate();
+    const month = d.toLocaleString('en-US', { month: 'long' }).toLowerCase();
+    const getOrdinal = (n) => {
+      const s = ["th", "st", "nd", "rd"];
+      const v = n % 100;
+      return s[(v - 20) % 10] || s[v] || s[0];
+    };
+    return `${day}${getOrdinal(day)} of ${month}`;
+  };
+
+  const formatTimeOnly = (dateString) => {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    return d.toLocaleString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
 
   const [formData, setFormData] = useState({
     title: "",
@@ -257,6 +305,34 @@ const Organizer = () => {
     }
   };
 
+  const handleDeleteEvent = async (eventId) => {
+    if (!window.confirm("Are you sure you want to delete this event? This will also remove all registrations for this event.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/events/${eventId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setEvents(events.filter(e => e._id !== eventId));
+        setShowDetailsModal(false);
+        setSelectedEvent(null);
+        alert("Event deleted successfully!");
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to delete event: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      alert("Failed to delete event");
+    }
+  };
+
   const getEventRegistrations = (eventId) => {
     console.log("Getting registrations for event:", eventId);
     console.log("All registrations:", registrations);
@@ -452,7 +528,7 @@ const Organizer = () => {
       `}</style>
 
       <div className="min-h-screen" style={{
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #1e40af 100%)',
+        background: 'linear-gradient(160deg, #0a1628 0%, #0f2d6b 55%, #1a47a0 100%)',
         fontFamily: "'Nunito', sans-serif"
       }}>
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -480,52 +556,58 @@ const Organizer = () => {
             <p className="text-white/70 text-lg">Manage your events and approve student registrations</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-slideDown" style={{ animationDelay: '0.1s' }}>
-            <div className="glass-effect rounded-2xl p-6 border-l-4 border-blue-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/60 text-sm font-semibold mb-1">Total Events</p>
-                  <p className="text-4xl font-black text-white">{events.length}</p>
-                </div>
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <ScrollReveal delay={100} className="h-full">
+              <div className="glass-effect rounded-2xl p-6 border-l-4 border-blue-500 h-full">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/60 text-sm font-semibold mb-1">Total Events</p>
+                    <p className="text-4xl font-black text-white">{events.length}</p>
+                  </div>
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
                 </div>
               </div>
-            </div>
+            </ScrollReveal>
 
-            <div className="glass-effect rounded-2xl p-6 border-l-4 border-green-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/60 text-sm font-semibold mb-1">Total Participants</p>
-                  <p className="text-4xl font-black text-white">
-                    {events.reduce((sum, event) => sum + event.currentParticipants, 0)}
-                  </p>
-                </div>
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-700 rounded-2xl flex items-center justify-center">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
+            <ScrollReveal delay={200} className="h-full">
+              <div className="glass-effect rounded-2xl p-6 border-l-4 border-green-500 h-full">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/60 text-sm font-semibold mb-1">Total Participants</p>
+                    <p className="text-4xl font-black text-white">
+                      {events.reduce((sum, event) => sum + event.currentParticipants, 0)}
+                    </p>
+                  </div>
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-700 rounded-2xl flex items-center justify-center">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
                 </div>
               </div>
-            </div>
+            </ScrollReveal>
 
-            <div className="glass-effect rounded-2xl p-6 border-l-4 border-yellow-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/60 text-sm font-semibold mb-1">Pending Approvals</p>
-                  <p className="text-4xl font-black text-white">
-                    {registrations.filter(r => r.status === "pending").length}
-                  </p>
-                </div>
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-2xl flex items-center justify-center">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+            <ScrollReveal delay={300} className="h-full">
+              <div className="glass-effect rounded-2xl p-6 border-l-4 border-yellow-500 h-full">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/60 text-sm font-semibold mb-1">Pending Approvals</p>
+                    <p className="text-4xl font-black text-white">
+                      {registrations.filter(r => r.status === "pending").length}
+                    </p>
+                  </div>
+                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-2xl flex items-center justify-center">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                 </div>
               </div>
-            </div>
+            </ScrollReveal>
           </div>
 
           <div className="flex flex-wrap gap-3 mb-8 p-2 rounded-2xl glass-effect animate-slideDown" style={{ animationDelay: '0.2s' }}>
@@ -541,6 +623,21 @@ const Organizer = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
                 My Events
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("allEvents")}
+              className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === "allEvents"
+                ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
+                : "bg-white/5 text-white/70 hover:bg-white/10"
+                }`}
+            >
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                All Events
               </span>
             </button>
 
@@ -579,86 +676,195 @@ const Organizer = () => {
 
           {activeTab === "myEvents" && (
             <div className="space-y-6 animate-fadeIn">
+              {(() => {
+                const myEvents = events.filter(e => e.organizerId === user?._id || e.creator === user?._id || e.organizer === user?.name);
+                return myEvents.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {myEvents.map((event, index) => (
+                      <ScrollReveal
+                        key={event.id}
+                        delay={(index % 3) * 100}
+                        className="h-full"
+                      >
+                        <div
+                          className="event-card rounded-2xl overflow-hidden glass-effect cursor-pointer h-full"
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setShowDetailsModal(true);
+                          }}
+                        >
+                          <div className="relative h-48 overflow-hidden">
+                            <img
+                              src={event.photo || event.image}
+                              alt={event.title}
+                              className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                            />
+                            <div className="absolute top-4 right-4 flex gap-2">
+                              <span className={`status-badge ${event.status === 'open' ? 'status-open' : 'status-closed'}`}>
+                                {event.status}
+                              </span>
+                              {getPendingCount(event.id) > 0 && (
+                                <span className="status-badge status-pending">
+                                  {getPendingCount(event.id)} Pending
+                                </span>
+                              )}
+                            </div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                          </div>
+
+                          <div className="p-6 space-y-4">
+                            <div>
+                              <h2 className="text-xl md:text-2xl font-black text-white mb-2 uppercase tracking-tight group-hover:text-blue-400 transition-colors">
+                                {event.title}
+                              </h2>
+                              <p className="text-white/80 text-sm truncate">
+                                {event.description}
+                              </p>
+                            </div>
+
+                            <div className="space-y-2 text-sm">
+                              <div className="flex items-center gap-2 text-white/70">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span>{formatDateOnly(event.dateTime)}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-white/70">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>{formatTimeOnly(event.dateTime)}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-white/70">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                <span>{event.currentParticipants}/{event.maxParticipants} registered</span>
+                              </div>
+                            </div>
+
+                            <div className="pt-2 flex gap-3">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedEvent(event);
+                                  setShowDetailsModal(true);
+                                }}
+                                className="flex-1 py-3 rounded-xl font-semibold bg-white/10 hover:bg-white/20 text-white transition-all shadow-lg"
+                              >
+                                Details
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveTab("approvals");
+                                  setSelectedEvent(event);
+                                }}
+                                className="flex-1 py-3 rounded-xl font-semibold bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2"
+                                title="Manage Registrations"
+                              >
+                                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Manage
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </ScrollReveal>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-20">
+                    <div className="text-6xl mb-4 animate-float">📅</div>
+                    <h3 className="text-2xl font-bold text-white mb-2">No Events Yet</h3>
+                    <p className="text-white/70 text-lg mb-6">Create your first event to get started!</p>
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-white rounded-xl font-semibold shadow-lg transition-all"
+                    >
+                      Create Event
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {activeTab === "allEvents" && (
+            <div className="space-y-6 animate-fadeIn">
               {events.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {events.map((event, index) => (
-                    <div
+                    <ScrollReveal
                       key={event.id}
-                      className="event-card rounded-2xl overflow-hidden glass-effect cursor-pointer animate-scaleIn"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                      onClick={() => setSelectedEvent(event)}
+                      delay={(index % 3) * 100}
+                      className="h-full"
                     >
-                      <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={event.photo || event.image}
-                          alt={event.title}
-                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                        />
-                        <div className="absolute top-4 right-4 flex gap-2">
-                          <span className={`status-badge ${event.status === 'open' ? 'status-open' : 'status-closed'}`}>
-                            {event.status}
-                          </span>
-                          {getPendingCount(event.id) > 0 && (
-                            <span className="status-badge status-pending">
-                              {getPendingCount(event.id)} Pending
+                      <div
+                        className="event-card rounded-2xl overflow-hidden glass-effect cursor-pointer h-full"
+                        onClick={() => {
+                          setSelectedEvent(event);
+                          setShowDetailsModal(true);
+                        }}
+                      >
+                        <div className="relative h-48 overflow-hidden">
+                          <img
+                            src={event.photo || event.image}
+                            alt={event.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute top-4 right-4">
+                            <span className={`status-badge ${event.status === 'open' ? 'status-open' : 'status-closed'}`}>
+                              {event.status}
                             </span>
-                          )}
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                      </div>
-
-                      <div className="p-6 space-y-4">
-                        <div>
-                          <h3 className="text-xl font-bold text-white mb-2">
-                            {event.title}
-                          </h3>
-                          <p className="text-white/70 text-sm line-clamp-2">
-                            {event.description}
-                          </p>
-                        </div>
-
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2 text-white/70">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span>{new Date(event.dateTime).toLocaleDateString()} at {new Date(event.dateTime).toLocaleTimeString()}</span>
                           </div>
-                          <div className="flex items-center gap-2 text-white/70">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            <span>{event.currentParticipants}/{event.maxParticipants} registered</span>
-                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                         </div>
 
-                        <div className="pt-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveTab("approvals");
-                              setSelectedEvent(event);
-                            }}
-                            className="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white shadow-lg shadow-blue-500/30 transition-all"
-                          >
-                            Manage Registrations
-                          </button>
+                        <div className="p-6 space-y-4">
+                          <div>
+                            <h2 className="text-xl md:text-2xl font-black text-white mb-2 uppercase tracking-tight group-hover:text-blue-400 transition-colors">
+                              {event.title}
+                            </h2>
+                            <p className="text-white/80 text-sm truncate">{event.description}</p>
+                          </div>
+                          <div className="space-y-2 text-sm text-white/70">
+                            <div className="flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <span>{formatDateOnly(event.dateTime)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span>{formatTimeOnly(event.dateTime)}</span>
+                            </div>
+                          </div>
+                          <div className="pt-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedEvent(event);
+                                setShowDetailsModal(true);
+                              }}
+                              className="w-full py-3 rounded-xl font-semibold bg-white/10 hover:bg-white/20 text-white transition-all shadow-lg"
+                            >
+                              Details
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </ScrollReveal>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-20">
-                  <div className="text-6xl mb-4 animate-float">📅</div>
-                  <h3 className="text-2xl font-bold text-white mb-2">No Events Yet</h3>
-                  <p className="text-white/70 text-lg mb-6">Create your first event to get started!</p>
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-white rounded-xl font-semibold shadow-lg transition-all"
-                  >
-                    Create Event
-                  </button>
+                  <div className="text-6xl mb-4 animate-float">🔍</div>
+                  <h3 className="text-2xl font-bold text-white mb-2">No Events Found</h3>
+                  <p className="text-white/70 text-lg">System-wide events will appear here.</p>
                 </div>
               )}
             </div>
@@ -703,7 +909,7 @@ const Organizer = () => {
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                                {new Date(reg.registeredAt).toLocaleDateString()}
+                                {formatEventDate(reg.registeredAt)}
                               </span>
                               <span className={`status-badge status-${reg.status}`}>
                                 {reg.status}
@@ -997,6 +1203,190 @@ const Organizer = () => {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Premium Event Details Modal for Organizers */}
+        {showDetailsModal && selectedEvent && (
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
+            onClick={() => {
+              setShowDetailsModal(false);
+              setSelectedEvent(null);
+            }}
+          >
+            <div
+              className="max-w-3xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar rounded-2xl glass-effect border border-white/20 animate-scaleIn"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative h-64 sm:h-80 overflow-hidden m-4 rounded-3xl">
+                <img
+                  src={selectedEvent.photo || selectedEvent.image}
+                  alt={selectedEvent.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    setSelectedEvent(null);
+                  }}
+                  className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-xl rounded-full flex items-center justify-center text-white transition-all z-10"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <div className="absolute bottom-6 left-6 right-6">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3">
+                      <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-[10px] font-bold uppercase tracking-widest rounded-lg border border-blue-500/30">
+                        {selectedEvent.category}
+                      </span>
+                      <span className={`px-3 py-1 rounded-lg bg-black/20 border border-white/5 text-[10px] font-bold uppercase tracking-widest ${selectedEvent.status === 'open' ? 'text-green-400' : 'text-red-400'}`}>
+                        {selectedEvent.status}
+                      </span>
+                    </div>
+                    <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight">
+                      {selectedEvent.title}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 sm:p-8 space-y-6">
+                <div>
+                  <h3 className="text-lg font-black text-white mb-2 uppercase tracking-wide">Description</h3>
+                  <p className="text-white/80 leading-relaxed font-medium">{selectedEvent.description}</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Date */}
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Date</p>
+                      <p className="text-white font-bold text-sm tracking-tight">{formatDateOnly(selectedEvent.dateTime)}</p>
+                    </div>
+                  </div>
+
+                  {/* Time */}
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Time</p>
+                      <p className="text-white font-bold text-sm tracking-tight">{formatTimeOnly(selectedEvent.dateTime)}</p>
+                    </div>
+                  </div>
+
+                  {/* Location */}
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Location</p>
+                      <p className="text-white font-bold text-sm tracking-tight truncate max-w-[120px]" title={selectedEvent.place}>{selectedEvent.place}</p>
+                    </div>
+                  </div>
+
+                  {/* Organizer */}
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Organizer</p>
+                      <p className="text-white font-bold text-sm tracking-tight truncate max-w-[120px]" title={selectedEvent.organizer}>{selectedEvent.organizer}</p>
+                    </div>
+                  </div>
+
+                  {/* Participants */}
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Capacity</p>
+                      <p className="text-white font-bold text-xs tracking-tight">{selectedEvent.currentParticipants}/{selectedEvent.maxParticipants}</p>
+                      <div className="mt-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500" style={{ width: `${(selectedEvent.currentParticipants / selectedEvent.maxParticipants) * 100}%` }}></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Requirements */}
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Requirements</p>
+                      <p className="text-white font-bold text-sm tracking-tight truncate max-w-[120px]" title={selectedEvent.requirements || 'None'}>{selectedEvent.requirements || 'None'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedEvent.tags?.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="px-4 py-2 bg-gradient-to-r from-blue-500/20 to-blue-700/20 text-blue-300 rounded-full text-sm font-medium border border-blue-500/30"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                  <button
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      setActiveTab("approvals");
+                      // selectedEvent remains set for the approvals view
+                    }}
+                    className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-blue-500/30 transition-all"
+                  >
+                    Manage Registrations
+                  </button>
+                  <button
+                    onClick={() => handleDeleteEvent(selectedEvent.id)}
+                    className="flex-1 py-4 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/30 transition-all"
+                  >
+                    Delete Event
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      setSelectedEvent(null);
+                    }}
+                    className="sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-all"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           </div>

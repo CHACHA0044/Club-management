@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../common/Navbar";
+import ScrollReveal from "../common/ScrollReveal";
+import { useToast } from "../../context/ToastContext";
+
 const EventsPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("browse");
@@ -9,6 +13,64 @@ const EventsPage = () => {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const catBtnRef = useRef(null);
+  const { showToast } = useToast();
+  const [userRegistrations, setUserRegistrations] = useState([]);
+
+  const formatEventDate = (dateString) => {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    const day = d.getDate();
+    const month = d.toLocaleString('en-US', { month: 'long' }).toLowerCase();
+
+    const getOrdinal = (n) => {
+      const s = ["th", "st", "nd", "rd"];
+      const v = n % 100;
+      return s[(v - 20) % 10] || s[v] || s[0];
+    };
+
+    const time = d.toLocaleString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    return `${day}${getOrdinal(day)} of ${month} , ${time}`;
+  };
+
+  const formatDateOnly = (dateString) => {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    const day = d.getDate();
+    const month = d.toLocaleString('en-US', { month: 'long' }).toLowerCase();
+    const getOrdinal = (n) => {
+      const s = ["th", "st", "nd", "rd"];
+      const v = n % 100;
+      return s[(v - 20) % 10] || s[v] || s[0];
+    };
+    return `${day}${getOrdinal(day)} of ${month}`;
+  };
+
+  const formatTimeOnly = (dateString) => {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    return d.toLocaleString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const CATEGORIES = [
+    { value: "all", label: "All Categories" },
+    { value: "workshop", label: "Workshops" },
+    { value: "competition", label: "Competitions" },
+    { value: "cultural", label: "Cultural" },
+    { value: "sports", label: "Sports" },
+    { value: "seminar", label: "Seminars" },
+  ];
 
   const [formData, setFormData] = useState({
     title: "",
@@ -28,6 +90,28 @@ const EventsPage = () => {
   const isAdmin = user?.role === "admin";
   const API_URL = process.env.REACT_APP_API_URL || "/api";
 
+  // Position and open dropdown
+  const openDropdown = (e) => {
+    e.stopPropagation();
+    if (!categoryOpen && catBtnRef.current) {
+      const rect = catBtnRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+    setCategoryOpen(v => !v);
+  };
+
+  // Close category dropdown on outside click
+  useEffect(() => {
+    if (!categoryOpen) return;
+    const handler = () => setCategoryOpen(false);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [categoryOpen]);
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -39,8 +123,25 @@ const EventsPage = () => {
       }
     };
 
+    const fetchMyRegistrations = async () => {
+      if (!isLoggedIn) return;
+      try {
+        const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+        const response = await fetch(`${API_URL}/events/registrations/my`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        setUserRegistrations(data);
+      } catch (error) {
+        console.error("Error fetching my registrations:", error);
+      }
+    };
+
     fetchEvents();
-  }, []);
+    fetchMyRegistrations();
+  }, [isLoggedIn]);
   // const mockEvents = [
   //   {
   //     id: 1,
@@ -185,7 +286,7 @@ const EventsPage = () => {
       });
       setLoading(false);
       setActiveTab("browse");
-      alert("Event created successfully!");
+      showToast("Event created successfully!", "success");
     }, 1000);
   };
 
@@ -196,6 +297,11 @@ const EventsPage = () => {
     }
 
     try {
+      if (userRegistrations.some(reg => (reg.event?._id || reg.eventId) === eventId)) {
+        showToast("Already registered for this event", "info");
+        return;
+      }
+
       const token = sessionStorage.getItem("token") || localStorage.getItem("token");
       const response = await fetch(`${API_URL}/events/${eventId}/register`, {
         method: "POST",
@@ -205,14 +311,17 @@ const EventsPage = () => {
       });
 
       if (response.ok) {
-        alert("Successfully registered for event!");
+        showToast("Successfully registered for event!", "success");
+        // Update local registrations
+        const regData = await response.json();
+        setUserRegistrations(prev => [...prev, regData.registration]);
       } else {
         const data = await response.json();
-        alert(data.message || "Failed to register");
+        showToast(data.message || "Failed to register", "error");
       }
     } catch (error) {
       console.error("Error registering:", error);
-      alert("Failed to register for event");
+      showToast("Failed to register for event", "error");
     }
   };
 
@@ -375,10 +484,37 @@ const EventsPage = () => {
             display: none;
           }
         }
+
+        /* Toast Notifications */
+        .toast-notification {
+          animation: toast-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes toast-in {
+          from {
+            opacity: 0;
+            transform: translateX(100%) scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+
+        .toast-notification.hiding {
+          animation: toast-out 0.3s ease-in forwards;
+        }
+
+        @keyframes toast-out {
+          to {
+            opacity: 0;
+            transform: translateX(20px) scale(0.95);
+          }
+        }
       `}</style>
 
       <div className="min-h-screen" style={{
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #1e40af 100%)',
+        background: 'linear-gradient(160deg, #0a1628 0%, #0f2d6b 55%, #1a47a0 100%)',
         fontFamily: "'Nunito', sans-serif"
       }}>
         {/* Animated Background */}
@@ -454,25 +590,33 @@ const EventsPage = () => {
         </header> */}
         <Navbar user={user} isLoggedIn={isLoggedIn} />
         {/* Main Content */}
-        <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Tabs */}
-          <div className="flex flex-wrap gap-3 mb-8 p-2 rounded-2xl glass-effect animate-slideDown">
-            <button
-              onClick={() => setActiveTab("browse")}
-              className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === "browse"
-                ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
-                : "bg-white/5 text-white/70 hover:bg-white/10"
-                }`}
-            >
-              <span className="flex items-center justify-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                Browse Events
-              </span>
-            </button>
+        <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+          {/* Heading */}
+          <div className="mb-10 ml-2 animate-slideDown">
+            <h1 className="text-4xl md:text-5xl font-black text-white mb-3 tracking-tight">
+              All <span className="text-blue-400">Events</span>
+            </h1>
+            <p className="text-white/60 text-lg font-medium">Explore and join upcoming activities and competitions</p>
+          </div>
 
-            {isAdmin && (
+          {/* Tabs */}
+          {isAdmin && (
+            <div className="flex flex-wrap gap-3 mb-8 p-2 rounded-2xl glass-effect animate-slideDown">
+              <button
+                onClick={() => setActiveTab("browse")}
+                className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === "browse"
+                  ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg shadow-blue-500/30"
+                  : "bg-white/5 text-white/70 hover:bg-white/10"
+                  }`}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Browse Events
+                </span>
+              </button>
+
               <button
                 onClick={() => setActiveTab("create")}
                 className={`flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === "create"
@@ -487,462 +631,577 @@ const EventsPage = () => {
                   Create Event
                 </span>
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Browse Events Tab */}
-          {activeTab === "browse" && (
-            <div className="space-y-6 animate-fadeIn">
-              {/* Search and Filter */}
-              <div className="flex flex-col sm:flex-row gap-4 p-4 sm:p-6 rounded-2xl glass-effect">
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    placeholder="Search events..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-3 pl-12 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
-                  />
-                  <svg className="w-5 h-5 text-white/50 absolute left-4 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-
-                <select
-                  value={filterCategory}
-                  onChange={(e) => setFilterCategory(e.target.value)}
-                  className="px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white transition-all cursor-pointer"
-                >
-                  <option value="all" className="bg-gray-900">All Categories</option>
-                  <option value="workshop" className="bg-gray-900">Workshops</option>
-                  <option value="competition" className="bg-gray-900">Competitions</option>
-                  <option value="cultural" className="bg-gray-900">Cultural</option>
-                  <option value="sports" className="bg-gray-900">Sports</option>
-                  <option value="seminar" className="bg-gray-900">Seminars</option>
-                </select>
-              </div>
-
-              {/* Events Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredEvents.map((event, index) => (
-                  <div
-                    key={event._id}
-                    className="event-card rounded-2xl overflow-hidden glass-effect cursor-pointer animate-scaleIn"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                    onClick={() => setSelectedEvent(event)}
-                  >
-                    {/* Event Image */}
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={event.photo || event.image}
-                        alt={event.title}
-                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                      />
-                      <div className="absolute top-4 right-4">
-                        <span className={`status-badge ${event.status === 'open' ? 'status-open' : 'status-closed'}`}>
-                          {event.status}
-                        </span>
-                      </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                    </div>
-
-                    {/* Event Content */}
-                    <div className="p-6 space-y-4">
-                      <div>
-                        <h3 className="text-xl font-bold text-white mb-2">
-                          {event.title}
-                        </h3>
-                        <p className="text-white/70 text-sm line-clamp-2">
-                          {event.description}
-                        </p>
-                      </div>
-
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center gap-2 text-white/70">
-                          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <span>{new Date(event.dateTime).toLocaleDateString()} at {new Date(event.dateTime).toLocaleTimeString()}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-white/70">
-                          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span className="truncate">{event.place}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-white/70">
-                          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
-                          <span>{event.currentParticipants}/{event.maxParticipants} registered</span>
-                        </div>
-                      </div>
-
-                      {/* Tags */}
-                      <div className="flex flex-wrap gap-2">
-                        {event.tags.map((tag, idx) => (
-                          <span
-                            key={idx}
-                            className="px-3 py-1 bg-gradient-to-r from-blue-500/20 to-blue-700/20 text-blue-300 rounded-full text-xs font-medium border border-blue-500/30"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Register Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRegister(event._id);
-                        }}
-                        disabled={event.status === 'closed'}
-                        className={`w-full py-3 rounded-xl font-semibold transition-all ${event.status === 'open'
-                          ? 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white shadow-lg shadow-blue-500/30'
-                          : 'bg-white/10 text-white/50 cursor-not-allowed'
-                          }`}
-                      >
-                        {event.status === 'open' ? 'Register Now' : 'Registration Closed'}
-                      </button>
-                    </div>
+          {
+            activeTab === "browse" && (
+              <div className="space-y-6 animate-fadeIn">
+                {/* Search and Filter */}
+                <div className="flex flex-col sm:flex-row gap-4 p-4 sm:p-6 rounded-2xl glass-effect" style={{ overflow: 'visible' }}>
+                  <div className="flex-1 relative">
+                    <input
+                      type="text"
+                      placeholder="Search events..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full px-4 py-3 pl-12 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
+                    />
+                    <svg className="w-5 h-5 text-white/50 absolute left-4 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                   </div>
-                ))}
-              </div>
 
-              {filteredEvents.length === 0 && (
-                <div className="text-center py-20">
-                  <div className="text-6xl mb-4 animate-float">🔍</div>
-                  <p className="text-white/70 text-lg">No events found matching your criteria</p>
+                  {/* Custom animated category dropdown */}
+                  <div className="relative" style={{ minWidth: '180px' }}>
+                    <button
+                      ref={catBtnRef}
+                      type="button"
+                      onClick={openDropdown}
+                      className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-white text-sm font-semibold transition-all"
+                      style={{
+                        background: 'rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                      }}
+                    >
+                      <span>{CATEGORIES.find(c => c.value === filterCategory)?.label}</span>
+                      <svg
+                        className="w-4 h-4 text-white/60 flex-shrink-0 transition-transform duration-200"
+                        style={{ transform: categoryOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {/* Portal dropdown — renders on document.body to escape stacking context */}
+                    {ReactDOM.createPortal(
+                      <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          position: 'absolute',
+                          top: dropdownPos.top,
+                          left: dropdownPos.left,
+                          width: dropdownPos.width || 180,
+                          zIndex: 99999,
+                          background: 'rgba(15,45,107,0.98)',
+                          border: '1px solid rgba(59,130,246,0.3)',
+                          borderRadius: '16px',
+                          backdropFilter: 'blur(24px)',
+                          WebkitBackdropFilter: 'blur(24px)',
+                          boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
+                          opacity: categoryOpen ? 1 : 0,
+                          transform: categoryOpen ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.97)',
+                          transformOrigin: 'top',
+                          transition: 'opacity 0.2s ease, transform 0.2s ease',
+                          pointerEvents: categoryOpen ? 'auto' : 'none',
+                        }}
+                      >
+                        <div className="py-2 px-1">
+                          {CATEGORIES.map((cat, i) => (
+                            <button
+                              key={cat.value}
+                              type="button"
+                              onClick={() => { setFilterCategory(cat.value); setCategoryOpen(false); }}
+                              className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-semibold text-left"
+                              style={{
+                                color: filterCategory === cat.value ? '#fff' : 'rgba(255,255,255,0.6)',
+                                background: filterCategory === cat.value ? 'rgba(59,130,246,0.3)' : 'transparent',
+                                opacity: categoryOpen ? 1 : 0,
+                                transform: categoryOpen ? 'translateX(0)' : 'translateX(-6px)',
+                                transition: `opacity 0.16s ease ${i * 0.035}s, transform 0.16s ease ${i * 0.035}s, background 0.15s`,
+                              }}
+                            >
+                              <span>{cat.label}</span>
+                              {filterCategory === cat.value && (
+                                <svg className="w-4 h-4 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>,
+                      document.body
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
+
+                {/* Events Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredEvents.map((event, index) => (
+                    <ScrollReveal
+                      key={event._id}
+                      delay={(index % 3) * 100}
+                      className="h-full"
+                    >
+                      <div
+                        className="event-card rounded-2xl overflow-hidden glass-effect cursor-pointer h-full"
+                        onClick={() => setSelectedEvent(event)}
+                      >
+                        {/* Event Image */}
+                        <div className="relative h-48 rounded-2xl overflow-hidden">
+                          <img
+                            src={event.photo || event.image}
+                            alt={event.title}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 rounded-3xl"
+                          />
+                          <div className="absolute top-4 right-4">
+                            <span className={`status-badge ${event.status === 'open' ? 'status-open' : 'status-closed'}`}>
+                              {event.status}
+                            </span>
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        </div>
+
+                        {/* Event Content */}
+                        <div className="p-6 space-y-4">
+                          <div>
+                            <h2 className="text-xl md:text-2xl font-black text-white mb-2 uppercase tracking-tight group-hover:text-blue-400 transition-colors">
+                              {event.title}
+                            </h2>
+                            <span className="text-white text-sm font-medium truncate">
+                              {event.description}
+                            </span>
+                          </div>
+
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-center gap-2 text-white/70">
+                              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <span>{formatEventDate(event.dateTime)}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-white/70">
+                              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              <span className="truncate">{event.place}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-white/70">
+                              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                              </svg>
+                              <span>{event.currentParticipants}/{event.maxParticipants} registered</span>
+                            </div>
+                          </div>
+
+                          {/* Tags */}
+                          <div className="flex flex-wrap gap-2">
+                            {event.tags.map((tag, idx) => (
+                              <span
+                                key={idx}
+                                className="px-3 py-1 bg-gradient-to-r from-blue-500/20 to-blue-700/20 text-blue-300 rounded-full text-xs font-medium border border-blue-500/30"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+
+                          {/* Register Button */}
+                          {(() => {
+                            const isRegistered = userRegistrations.some(reg => (reg.event?._id || reg.eventId) === event._id);
+                            return (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRegister(event._id);
+                                }}
+                                disabled={event.status === 'closed'}
+                                className={`w-full py-3 rounded-xl font-semibold transition-all ${event.status === 'open'
+                                  ? isRegistered
+                                    ? 'bg-slate-800 text-white/90 border border-white/10'
+                                    : 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white shadow-lg shadow-blue-500/30'
+                                  : 'bg-white/10 text-white/50 cursor-not-allowed'
+                                  }`}
+                              >
+                                {event.status === 'closed'
+                                  ? 'Registration Closed'
+                                  : isRegistered
+                                    ? 'Registered'
+                                    : 'Register Now'
+                                }
+                              </button>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    </ScrollReveal>
+                  ))}
+                </div>
+
+                {filteredEvents.length === 0 && (
+                  <div className="text-center py-20">
+                    <div className="text-6xl mb-4 animate-float">🔍</div>
+                    <p className="text-white/70 text-lg">No events found matching your criteria</p>
+                  </div>
+                )}
+              </div>
+            )
+          }
 
           {/* Create Event Tab */}
-          {activeTab === "create" && isAdmin && (
-            <div className="max-w-4xl mx-auto animate-fadeIn">
-              <div className="p-6 sm:p-8 rounded-2xl glass-effect">
-                <h2 className="text-3xl font-bold text-white mb-6">
-                  Create New Event
-                </h2>
+          {
+            activeTab === "create" && isAdmin && (
+              <div className="max-w-4xl mx-auto animate-fadeIn">
+                <div className="p-6 sm:p-8 rounded-2xl glass-effect">
+                  <h2 className="text-3xl font-bold text-white mb-6">
+                    Create New Event
+                  </h2>
 
-                <form onSubmit={handleSubmitEvent} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2">
-                      <label className="block text-white/90 font-semibold mb-2">Event Title *</label>
-                      <input
-                        type="text"
-                        name="title"
-                        value={formData.title}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="Enter event title"
-                        className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
-                      />
+                  <form onSubmit={handleSubmitEvent} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="md:col-span-2">
+                        <label className="block text-white/90 font-semibold mb-2">Event Title *</label>
+                        <input
+                          type="text"
+                          name="title"
+                          value={formData.title}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="Enter event title"
+                          className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-white/90 font-semibold mb-2">Description *</label>
+                        <textarea
+                          name="description"
+                          value={formData.description}
+                          onChange={handleInputChange}
+                          required
+                          rows="4"
+                          placeholder="Describe your event"
+                          className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all resize-none custom-scrollbar"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-white/90 font-semibold mb-2">Category *</label>
+                        <select
+                          name="category"
+                          value={formData.category}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white transition-all cursor-pointer"
+                        >
+                          <option value="workshop" className="bg-gray-900">Workshop</option>
+                          <option value="competition" className="bg-gray-900">Competition</option>
+                          <option value="cultural" className="bg-gray-900">Cultural</option>
+                          <option value="sports" className="bg-gray-900">Sports</option>
+                          <option value="seminar" className="bg-gray-900">Seminar</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-white/90 font-semibold mb-2">Max Participants *</label>
+                        <input
+                          type="number"
+                          name="maxParticipants"
+                          value={formData.maxParticipants}
+                          onChange={handleInputChange}
+                          required
+                          min="1"
+                          placeholder="50"
+                          className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-white/90 font-semibold mb-2">Date *</label>
+                        <input
+                          type="date"
+                          name="date"
+                          value={formData.date}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-white/90 font-semibold mb-2">Time *</label>
+                        <input
+                          type="time"
+                          name="time"
+                          value={formData.time}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white transition-all"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-white/90 font-semibold mb-2">Location *</label>
+                        <input
+                          type="text"
+                          name="location"
+                          value={formData.location}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="Room 301, Tech Building"
+                          className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-white/90 font-semibold mb-2">Organizer *</label>
+                        <input
+                          type="text"
+                          name="organizer"
+                          value={formData.organizer}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="Tech Club"
+                          className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-white/90 font-semibold mb-2">Requirements</label>
+                        <input
+                          type="text"
+                          name="requirements"
+                          value={formData.requirements}
+                          onChange={handleInputChange}
+                          placeholder="Laptop required"
+                          className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-white/90 font-semibold mb-2">Tags (comma-separated)</label>
+                        <input
+                          type="text"
+                          name="tags"
+                          value={formData.tags}
+                          onChange={handleInputChange}
+                          placeholder="web, react, nodejs"
+                          className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
+                        />
+                      </div>
                     </div>
 
-                    <div className="md:col-span-2">
-                      <label className="block text-white/90 font-semibold mb-2">Description *</label>
-                      <textarea
-                        name="description"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        required
-                        rows="4"
-                        placeholder="Describe your event"
-                        className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all resize-none custom-scrollbar"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-white/90 font-semibold mb-2">Category *</label>
-                      <select
-                        name="category"
-                        value={formData.category}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white transition-all cursor-pointer"
+                    <div className="flex gap-4 pt-4">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <option value="workshop" className="bg-gray-900">Workshop</option>
-                        <option value="competition" className="bg-gray-900">Competition</option>
-                        <option value="cultural" className="bg-gray-900">Cultural</option>
-                        <option value="sports" className="bg-gray-900">Sports</option>
-                        <option value="seminar" className="bg-gray-900">Seminar</option>
-                      </select>
+                        {loading ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Creating...
+                          </span>
+                        ) : (
+                          'Create Event'
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("browse")}
+                        className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-all"
+                      >
+                        Cancel
+                      </button>
                     </div>
-
-                    <div>
-                      <label className="block text-white/90 font-semibold mb-2">Max Participants *</label>
-                      <input
-                        type="number"
-                        name="maxParticipants"
-                        value={formData.maxParticipants}
-                        onChange={handleInputChange}
-                        required
-                        min="1"
-                        placeholder="50"
-                        className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-white/90 font-semibold mb-2">Date *</label>
-                      <input
-                        type="date"
-                        name="date"
-                        value={formData.date}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-white/90 font-semibold mb-2">Time *</label>
-                      <input
-                        type="time"
-                        name="time"
-                        value={formData.time}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white transition-all"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-white/90 font-semibold mb-2">Location *</label>
-                      <input
-                        type="text"
-                        name="location"
-                        value={formData.location}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="Room 301, Tech Building"
-                        className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-white/90 font-semibold mb-2">Organizer *</label>
-                      <input
-                        type="text"
-                        name="organizer"
-                        value={formData.organizer}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="Tech Club"
-                        className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-white/90 font-semibold mb-2">Requirements</label>
-                      <input
-                        type="text"
-                        name="requirements"
-                        value={formData.requirements}
-                        onChange={handleInputChange}
-                        placeholder="Laptop required"
-                        className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-white/90 font-semibold mb-2">Tags (comma-separated)</label>
-                      <input
-                        type="text"
-                        name="tags"
-                        value={formData.tags}
-                        onChange={handleInputChange}
-                        placeholder="web, react, nodejs"
-                        className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4 pt-4">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loading ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Creating...
-                        </span>
-                      ) : (
-                        'Create Event'
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("browse")}
-                      className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-all"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
+                  </form>
+                </div>
               </div>
-            </div>
-          )}
+            )
+          }
         </main>
 
         {/* Event Details Modal */}
-        {selectedEvent && (
-          <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
-            onClick={() => setSelectedEvent(null)}
-          >
+        {
+          selectedEvent && (
             <div
-              className="max-w-3xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar rounded-2xl glass-effect border border-white/20 animate-scaleIn"
-              onClick={(e) => e.stopPropagation()}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
+              onClick={() => setSelectedEvent(null)}
             >
-              <div className="relative h-64 sm:h-80 overflow-hidden">
-                <img
-                  src={selectedEvent.photo || selectedEvent.image}
-                  alt={selectedEvent.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-                <button
-                  onClick={() => setSelectedEvent(null)}
-                  className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-xl rounded-full flex items-center justify-center text-white transition-all"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                <div className="absolute bottom-6 left-6 right-6">
-                  <div className="flex items-start justify-between gap-4 flex-wrap">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-white">
-                      {selectedEvent.title}
-                    </h2>
-                    <span className={`status-badge ${selectedEvent.status === 'open' ? 'status-open' : 'status-closed'}`}>
-                      {selectedEvent.status}
-                    </span>
+              <div
+                className="max-w-3xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar rounded-2xl glass-effect border border-white/20 animate-scaleIn"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="relative h-64 sm:h-80 overflow-hidden m-4 rounded-3xl">
+                  <img
+                    src={selectedEvent.photo || selectedEvent.image}
+                    alt={selectedEvent.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                  <button
+                    onClick={() => setSelectedEvent(null)}
+                    className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-xl rounded-full flex items-center justify-center text-white transition-all z-10"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-3">
+                        <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-[10px] font-bold uppercase tracking-widest rounded-lg border border-blue-500/30">
+                          {selectedEvent.category}
+                        </span>
+                        <span className={`px-3 py-1 rounded-lg bg-black/20 border border-white/5 text-[10px] font-bold uppercase tracking-widest ${selectedEvent.status === 'open' ? 'text-green-400' : 'text-red-400'}`}>
+                          {selectedEvent.status}
+                        </span>
+                      </div>
+                      <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight">
+                        {selectedEvent.title}
+                      </h2>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="p-6 sm:p-8 space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Description</h3>
-                  <p className="text-white/70 leading-relaxed">{selectedEvent.description}</p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="p-6 sm:p-8 space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-3">Event Details</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <h3 className="text-lg font-black text-white mb-2 uppercase tracking-wide">Description</h3>
+                    <p className="text-white/80 leading-relaxed font-medium">{selectedEvent.description}</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Date */}
+                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                        <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <div>
-                          <p className="text-white/50 text-sm">Date & Time</p>
-                          <p className="text-white">{new Date(selectedEvent.dateTime).toLocaleDateString()} at {new Date(selectedEvent.dateTime).toLocaleTimeString()}</p>
-                        </div>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div>
+                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Date</p>
+                        <p className="text-white font-bold text-sm tracking-tight">{formatDateOnly(selectedEvent.dateTime)}</p>
+                      </div>
+                    </div>
+
+                    {/* Time */}
+                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                        <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Time</p>
+                        <p className="text-white font-bold text-sm tracking-tight">{formatTimeOnly(selectedEvent.dateTime)}</p>
+                      </div>
+                    </div>
+
+                    {/* Location */}
+                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                        <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        <div>
-                          <p className="text-white/50 text-sm">Location</p>
-                          <p className="text-white">{selectedEvent.place}</p>
-                        </div>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div>
+                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Location</p>
+                        <p className="text-white font-bold text-sm tracking-tight truncate max-w-[120px]" title={selectedEvent.place}>{selectedEvent.place}</p>
+                      </div>
+                    </div>
+
+                    {/* Organizer */}
+                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                        <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
-                        <div>
-                          <p className="text-white/50 text-sm">Organizer</p>
-                          <p className="text-white">{selectedEvent.organizer}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Organizer</p>
+                        <p className="text-white font-bold text-sm tracking-tight truncate max-w-[120px]" title={selectedEvent.organizer}>{selectedEvent.organizer}</p>
+                      </div>
+                    </div>
+
+                    {/* Participants */}
+                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                        <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Capacity</p>
+                        <p className="text-white font-bold text-xs tracking-tight">{selectedEvent.currentParticipants}/{selectedEvent.maxParticipants}</p>
+                        <div className="mt-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-500" style={{ width: `${(selectedEvent.currentParticipants / selectedEvent.maxParticipants) * 100}%` }}></div>
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Requirements */}
+                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                        <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Requirements</p>
+                        <p className="text-white font-bold text-sm tracking-tight truncate max-w-[120px]" title={selectedEvent.requirements || 'None'}>{selectedEvent.requirements || 'None'}</p>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-3">Registration Info</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        <div>
-                          <p className="text-white/50 text-sm">Participants</p>
-                          <p className="text-white">{selectedEvent.currentParticipants} / {selectedEvent.maxParticipants} registered</p>
-                          <div className="mt-2 h-2 bg-white/10 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-blue-600 to-blue-800 rounded-full transition-all"
-                              style={{ width: `${(selectedEvent.currentParticipants / selectedEvent.maxParticipants) * 100}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-                      {selectedEvent.requirements && (
-                        <div className="flex items-start gap-3">
-                          <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <div>
-                            <p className="text-white/50 text-sm">Requirements</p>
-                            <p className="text-white">{selectedEvent.requirements}</p>
-                          </div>
-                        </div>
-                      )}
+                    <h3 className="text-lg font-semibold text-white mb-3">Tags</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedEvent.tags.map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="px-4 py-2 bg-gradient-to-r from-blue-500/20 to-blue-700/20 text-blue-300 rounded-full text-sm font-medium border border-blue-500/30"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-3">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedEvent.tags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="px-4 py-2 bg-gradient-to-r from-blue-500/20 to-blue-700/20 text-blue-300 rounded-full text-sm font-medium border border-blue-500/30"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
+                  <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                    {(() => {
+                      const isRegistered = userRegistrations.some(reg => (reg.event?._id || reg.eventId) === selectedEvent._id);
+                      const isClosed = selectedEvent.status === 'closed';
+
+                      return (
+                        <button
+                          onClick={() => {
+                            if (!isRegistered) {
+                              handleRegister(selectedEvent._id);
+                              setSelectedEvent(null);
+                            }
+                          }}
+                          disabled={isClosed}
+                          className={`flex-1 py-4 rounded-xl font-black uppercase tracking-widest transition-all ${isClosed
+                            ? 'bg-white/10 text-white/50 cursor-not-allowed'
+                            : isRegistered
+                              ? 'bg-slate-800 text-white/90 border border-white/10'
+                              : 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white shadow-lg shadow-blue-500/30'
+                            }`}
+                        >
+                          {isClosed ? 'Registration Closed' : isRegistered ? 'Registered' : 'Register for Event'}
+                        </button>
+                      );
+                    })()}
+                    <button
+                      onClick={() => setSelectedEvent(null)}
+                      className="sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-all"
+                    >
+                      Close
+                    </button>
                   </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <button
-                    onClick={() => {
-                      handleRegister(selectedEvent._id);
-                      setSelectedEvent(null);
-                    }}
-                    disabled={selectedEvent.status === 'closed'}
-                    className={`flex-1 py-4 rounded-xl font-bold transition-all ${selectedEvent.status === 'open'
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white shadow-lg shadow-blue-500/30'
-                      : 'bg-white/10 text-white/50 cursor-not-allowed'
-                      }`}
-                  >
-                    {selectedEvent.status === 'open' ? 'Register for Event' : 'Registration Closed'}
-                  </button>
-                  <button
-                    onClick={() => setSelectedEvent(null)}
-                    className="sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-all"
-                  >
-                    Close
-                  </button>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )
+        }
       </div>
     </>
   );

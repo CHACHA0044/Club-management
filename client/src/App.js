@@ -6,19 +6,22 @@ import Register from "./components/auth/register";
 import Home from "./components/home";
 import EventsPage from "./components/events/EventsPage";
 import Organiser from "./components/organiser/Organizer.jsx";
+import { ToastProvider } from "./context/ToastContext";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/events" element={<EventsPage />} />
-        <Route path="/my-registrations" element={<MyRegistrations />} />
-        <Route path="/organizer" element={<Organiser />} />
-      </Routes>
-    </BrowserRouter>
+    <ToastProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/events" element={<EventsPage />} />
+          <Route path="/my-registrations" element={<MyRegistrations />} />
+          <Route path="/organizer" element={<Organiser />} />
+        </Routes>
+      </BrowserRouter>
+    </ToastProvider>
   );
 }
 
