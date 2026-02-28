@@ -141,7 +141,7 @@ const EventsPage = () => {
 
     fetchEvents();
     fetchMyRegistrations();
-  }, [isLoggedIn]);
+  }, [isLoggedIn, API_URL]);
   // const mockEvents = [
   //   {
   //     id: 1,

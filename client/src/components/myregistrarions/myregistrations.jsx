@@ -97,7 +97,6 @@ const MyRegistrations = () => {
   const userObj = JSON.parse(sessionStorage.getItem("user") || localStorage.getItem("user") || "null");
   const isLoggedIn = !!(sessionStorage.getItem("token") || localStorage.getItem("token"));
 
-  const getEvent = (eventId) => events.find(e => e._id === eventId);
 
   return (
     <>

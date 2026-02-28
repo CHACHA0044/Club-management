@@ -152,21 +152,6 @@ const Organizer = () => {
 
     checkAuth();
   }, [token, user, navigate, API_URL]);
-  const testEmail = async () => {
-    try {
-      const response = await fetch(`${API_URL}/events/test-email`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      alert(data.message);
-    } catch (error) {
-      console.error("Test email error:", error);
-      alert("Failed to send test email");
-    }
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

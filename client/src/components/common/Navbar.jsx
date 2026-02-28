@@ -67,12 +67,15 @@ const Navbar = ({ user, isLoggedIn }) => {
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 260, damping: 28, delay: 0.05 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-white/5 backdrop-blur-xl rounded-b-3xl overflow-hidden"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+          ? "bg-white/10 backdrop-blur-2xl border-b border-white/10 shadow-2xl shadow-black/20 py-1"
+          : "bg-white/5 backdrop-blur-xl py-0"
+        } rounded-b-3xl overflow-hidden`}
       style={{ fontFamily: "'Nunito', sans-serif" }}
     >
       {/* ── Main bar ── */}
       <div className="mx-auto px-4 sm:px-6 lg:px-10">
-        <div className="flex items-center justify-between h-16 sm:h-18">
+        <div className={`flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-14 sm:h-16' : 'h-16 sm:h-18'}`}>
 
           {/* Brand */}
           <motion.button
@@ -81,7 +84,7 @@ const Navbar = ({ user, isLoggedIn }) => {
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.94 }}
           >
-            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-blue-600/30 border border-blue-400/30 rounded-lg flex items-center justify-center group-hover:bg-blue-600/50 transition-colors">
+            <div className={`w-8 h-8 sm:w-9 sm:h-9 bg-blue-600/30 border border-blue-400/30 rounded-lg flex items-center justify-center group-hover:bg-blue-600/50 transition-colors ${scrolled ? 'scale-90' : 'scale-100'} transition-transform duration-300`}>
               <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -302,15 +305,6 @@ const MobileNavBtn = ({ children, active, onClick, primary, variants }) => (
   >
     {children}
   </motion.button>
-);
-
-const RoleBadge = ({ organizer, compact }) => (
-  <span className={`px-2 py-0.5 rounded-full text-xs font-bold shrink-0 ${organizer ? "bg-purple-600/80 text-white" : "bg-green-600/80 text-white"
-    }`}>
-    {compact
-      ? (organizer ? "🎯" : "🎓")
-      : (organizer ? "Organizer" : "Student")}
-  </span>
 );
 
 export default Navbar;
