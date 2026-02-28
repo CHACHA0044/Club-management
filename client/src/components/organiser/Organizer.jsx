@@ -717,9 +717,9 @@ const Organizer = () => {
                               <h2 className="text-xl md:text-2xl font-black text-white mb-2 uppercase tracking-tight group-hover:text-blue-400 transition-colors">
                                 {event.title}
                               </h2>
-                              <p className="text-white/80 text-sm truncate">
+                              <span className="text-white/80 text-sm truncate">
                                 {event.description}
-                              </p>
+                              </span>
                             </div>
 
                             <div className="space-y-2 text-sm">
@@ -827,7 +827,7 @@ const Organizer = () => {
                             <h2 className="text-xl md:text-2xl font-black text-white mb-2 uppercase tracking-tight group-hover:text-blue-400 transition-colors">
                               {event.title}
                             </h2>
-                            <p className="text-white/80 text-sm truncate">{event.description}</p>
+                            <span className="text-white/80 text-sm truncate">{event.description}</span>
                           </div>
                           <div className="space-y-2 text-sm text-white/70">
                             <div className="flex items-center gap-2">
