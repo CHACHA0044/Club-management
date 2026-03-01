@@ -1,10 +1,22 @@
 {
   "version": 2,
-  "buildCommand": "cd client && npm install && npm run build",
-  "outputDirectory": "client/build",
+  "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "build" }
+    },
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    }
+  ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/index.js" },
+    { "src": "/static/(.*)", "dest": "/client/static/$1" },
+    { "src": "/images/(.*)", "dest": "/client/images/$1" },
+    { "src": "/(manifest\\.json|robots\\.txt|asset-manifest\\.json)", "dest": "/client/$1" },
     { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "src": "/(.*)", "dest": "/client/index.html" }
   ]
 }
